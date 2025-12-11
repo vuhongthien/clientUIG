@@ -289,27 +289,27 @@ public class ShopManager : MonoBehaviour
     }
 
     void OnShopDataLoaded(ShopDataResponse data)
-{
-    ManagerGame.Instance.HideLoading();
-    shopData = data;
-
-    Debug.Log($"[ShopManager] Shop data loaded - Items: {data.items?.Count}, Pets: {data.pets?.Count}, Avatars: {data.avatars?.Count}");
-
-    // Update currency display
-    UpdateCurrencyDisplay();
-
-    // Giữ nguyên category và page hiện tại
-    if (string.IsNullOrEmpty(currentCategory))
     {
-        // Lần đầu mở shop
-        SwitchCategory("AVATAR", resetPage: true);
+        ManagerGame.Instance.HideLoading();
+        shopData = data;
+
+        Debug.Log($"[ShopManager] Shop data loaded - Items: {data.items?.Count}, Pets: {data.pets?.Count}, Avatars: {data.avatars?.Count}");
+
+        // Update currency display
+        UpdateCurrencyDisplay();
+
+        // Giữ nguyên category và page hiện tại
+        if (string.IsNullOrEmpty(currentCategory))
+        {
+            // Lần đầu mở shop
+            SwitchCategory("AVATAR", resetPage: true);
+        }
+        else
+        {
+            // Sau khi mua → giữ nguyên page
+            SwitchCategory(currentCategory, resetPage: false);
+        }
     }
-    else
-    {
-        // Sau khi mua → giữ nguyên page
-        SwitchCategory(currentCategory, resetPage: false);
-    }
-}
 
     void OnShopDataError(string error)
     {
@@ -356,32 +356,32 @@ public class ShopManager : MonoBehaviour
 
     // ANIMATION: Switch category với fade và slide
     void SwitchCategory(string category, bool resetPage = true)
-{
-    currentCategory = category;
-    
-    if (resetPage)
     {
-        currentPage = 0;
-    }
+        currentCategory = category;
 
-    // Fade out current list
-    GameObject currentList = GetCurrentListObject();
-    if (currentList != null && currentList.activeSelf)
-    {
-        FadeOutList(currentList, () =>
+        if (resetPage)
+        {
+            currentPage = 0;
+        }
+
+        // Fade out current list
+        GameObject currentList = GetCurrentListObject();
+        if (currentList != null && currentList.activeSelf)
+        {
+            FadeOutList(currentList, () =>
+            {
+                HideAllLists();
+                ResetButtonScales();
+                ShowCategoryContent(category);
+            });
+        }
+        else
         {
             HideAllLists();
             ResetButtonScales();
             ShowCategoryContent(category);
-        });
+        }
     }
-    else
-    {
-        HideAllLists();
-        ResetButtonScales();
-        ShowCategoryContent(category);
-    }
-}
 
     GameObject GetCurrentListObject()
     {
@@ -681,59 +681,59 @@ public class ShopManager : MonoBehaviour
         StartCoroutine(DisplayPetsAnimated());
     }
 
-    // ANIMATION: Display avatars với fade và scale
+    // ANIMATION: Display avatars với fade đơn giản
     IEnumerator DisplayAvatarsAnimated()
-{
-    int startIndex = currentPage * 2;
-
-    for (int i = 0; i < 2; i++)
     {
-        int dataIndex = startIndex + i;
+        int startIndex = currentPage * 2;
 
-        if (dataIndex < currentAvatars.Count)
+        for (int i = 0; i < 2; i++)
         {
-            ShopAvatarDTO avatar = currentAvatars[dataIndex];
+            int dataIndex = startIndex + i;
 
-            if (avtImages[i] != null)
+            if (dataIndex < currentAvatars.Count)
             {
-                Sprite avtSprite = Resources.Load<Sprite>("Image/Avt/" + avatar.id);
-                if (avtSprite != null) avtImages[i].sprite = avtSprite;
-                avtImages[i].gameObject.SetActive(true);
+                ShopAvatarDTO avatar = currentAvatars[dataIndex];
 
-                // FLIP NGANG (scale X từ 0 lên 1)
-                avtImages[i].transform.localScale = new Vector3(0f, 1f, 1f);
-                
-                LeanTween.scaleX(avtImages[i].gameObject, 1f, 0.4f)
-                    .setEaseOutBack()
-                    .setDelay(i * 0.15f);
+                if (avtImages[i] != null)
+                {
+                    Sprite avtSprite = Resources.Load<Sprite>("Image/Avt/" + avatar.id);
+                    if (avtSprite != null) avtImages[i].sprite = avtSprite;
+                    avtImages[i].gameObject.SetActive(true);
+
+                    // ĐƠN GIẢN: Chỉ fade in, không scale
+                    CanvasGroup cg = avtImages[i].GetComponent<CanvasGroup>();
+                    if (cg == null) cg = avtImages[i].gameObject.AddComponent<CanvasGroup>();
+
+                    cg.alpha = 0;
+                    LeanTween.alphaCanvas(cg, 1f, 0.3f).setDelay(i * 0.1f);
+                }
+
+                if (avtAtk[i] != null) avtAtk[i].text = avatar.attack.ToString();
+                if (avtMana[i] != null) avtMana[i].text = avatar.mana.ToString();
+                if (avtHp[i] != null) avtHp[i].text = avatar.hp.ToString();
+
+                GameObject dummy = null;
+                SetPriceWithPrefab(avtPrice[i], avatar.price, avatar.currencyType, ref dummy, avatar.owned);
+
+                if (avtButtons[i] != null)
+                {
+                    avtButtons[i].gameObject.SetActive(true);
+                    avtButtons[i].interactable = !avatar.owned;
+                }
+            }
+            else
+            {
+                if (avtImages[i] != null) avtImages[i].gameObject.SetActive(false);
+                if (avtButtons[i] != null) avtButtons[i].gameObject.SetActive(false);
+                if (avtPrice[i] != null && avtPrice[i].transform.parent != null)
+                {
+                    avtPrice[i].transform.parent.gameObject.SetActive(false);
+                }
             }
 
-            if (avtAtk[i] != null) avtAtk[i].text = avatar.attack.ToString();
-            if (avtMana[i] != null) avtMana[i].text = avatar.mana.ToString();
-            if (avtHp[i] != null) avtHp[i].text = avatar.hp.ToString();
-
-            GameObject dummy = null;
-            SetPriceWithPrefab(avtPrice[i], avatar.price, avatar.currencyType, ref dummy, avatar.owned);
-
-            if (avtButtons[i] != null)
-            {
-                avtButtons[i].gameObject.SetActive(true);
-                avtButtons[i].interactable = !avatar.owned;
-            }
+            yield return new WaitForSeconds(0.1f);
         }
-        else
-        {
-            if (avtImages[i] != null) avtImages[i].gameObject.SetActive(false);
-            if (avtButtons[i] != null) avtButtons[i].gameObject.SetActive(false);
-            if (avtPrice[i] != null && avtPrice[i].transform.parent != null)
-            {
-                avtPrice[i].transform.parent.gameObject.SetActive(false);
-            }
-        }
-
-        yield return new WaitForSeconds(0.1f);
     }
-}
 
     void DisplayAvatars()
     {
