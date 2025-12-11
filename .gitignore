@@ -13,14 +13,13 @@
 # For security purposes
 [Gg]oogle[Ss]ervices/
 
-# Never ignore folders inside Assets
-![Aa]ssets/**/[Ll]ibrary/
+# Remove wrong un-ignore rules (fix for your case)
+# ![Aa]ssets/**/[Ll]ibrary/
+# ![Aa]ssets/**/*.meta
 
-# Never ignore Assets meta data
-![Aa]ssets/**/*.meta
-
-# Uncomment this line if you wish to ignore the asset store tools plugin
-# [Aa]ssets/[Aa]sset[Ss]tore[Tt]ools*
+# Ignore custom folders
+.history/
+[Aa]ssets/Photon/
 
 # Visual Studio cache directory
 .vs/

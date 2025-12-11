@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: 7e847a6c537346342b81d12d05dc0987
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2635698198150229208
+    second: zhiliao_0
+  - first:
+      213: 5309689599419481473
+    second: zhiliao_1
+  - first:
+      213: 3508295219450813194
+    second: zhiliao_2
+  - first:
+      213: 1698903745745484200
+    second: zhiliao_3
+  - first:
+      213: 2686753212088698908
+    second: zhiliao_4
+  - first:
+      213: -6663762213397772046
+    second: zhiliao_5
+  - first:
+      213: 3192271154687814410
+    second: zhiliao_6
+  - first:
+      213: -752817448029634685
+    second: zhiliao_7
+  - first:
+      213: 2513120726404821159
+    second: zhiliao_8
+  - first:
+      213: -2956504467695653184
+    second: zhiliao_9
+  - first:
+      213: 7914626763891519256
+    second: zhiliao_10
+  - first:
+      213: 4886132056498876310
+    second: zhiliao_11
+  - first:
+      213: -2064855720009898598
+    second: zhiliao_12
+  - first:
+      213: -3379667101690557020
+    second: zhiliao_13
+  - first:
+      213: 7257090103819716892
+    second: zhiliao_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  swizzle: 50462976
+  cookieLightType: 1
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: zhiliao_0
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 1305
+        width: 612
+        height: 332
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79ff8371c0d856a4e953d3a5c0bae59e
+      internalID: 2635698198150229208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_1
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 1478
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c304d4fb444b67546b0d9deace717640
+      internalID: 5309689599419481473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_2
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 972
+        width: 612
+        height: 331
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c4b871b0cd9899428bbcab720332b5e
+      internalID: 3508295219450813194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_3
+      rect:
+        serializedVersion: 2
+        x: 616
+        y: 992
+        width: 612
+        height: 331
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 779f86f8f70949a4f87629c620d191e0
+      internalID: 1698903745745484200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_4
+      rect:
+        serializedVersion: 2
+        x: 831
+        y: 997
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 95af83bd7c088f043bf3f010e41bb788
+      internalID: 2686753212088698908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_5
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 992
+        width: 610
+        height: 332
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 097f74316814d3e4fa7279a1d3c5312c
+      internalID: -6663762213397772046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_6
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 640
+        width: 614
+        height: 330
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a2cb774dc41f8434ca45928efc4c0e74
+      internalID: 3192271154687814410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_7
+      rect:
+        serializedVersion: 2
+        x: 618
+        y: 660
+        width: 610
+        height: 330
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a19ce8ef761b36d44bc359b36323c450
+      internalID: -752817448029634685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_8
+      rect:
+        serializedVersion: 2
+        x: 1231
+        y: 659
+        width: 614
+        height: 331
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0361088d5444c6a44aa6534f9c2375bb
+      internalID: 2513120726404821159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_9
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 311
+        width: 617
+        height: 327
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff77b7cc5770706498b1012ce931ed1c
+      internalID: -2956504467695653184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_10
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 331
+        width: 618
+        height: 327
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0165b2ef06e9eed4e850d0160db464a1
+      internalID: 7914626763891519256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_11
+      rect:
+        serializedVersion: 2
+        x: 1241
+        y: 331
+        width: 616
+        height: 327
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 08f58254cfb777c4bbaf9978837f2114
+      internalID: 4886132056498876310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_12
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 2
+        width: 585
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a960d14effd19947bb4c27253fd7730
+      internalID: -2064855720009898598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_13
+      rect:
+        serializedVersion: 2
+        x: 588
+        y: 2
+        width: 584
+        height: 307
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0e23d40750a00ad409493278638c9724
+      internalID: -3379667101690557020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: zhiliao_14
+      rect:
+        serializedVersion: 2
+        x: 1173
+        y: 2
+        width: 617
+        height: 327
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b1adc361def13d48b64d1203189d34b
+      internalID: 7257090103819716892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      zhiliao_0: 2635698198150229208
+      zhiliao_1: 5309689599419481473
+      zhiliao_10: 7914626763891519256
+      zhiliao_11: 4886132056498876310
+      zhiliao_12: -2064855720009898598
+      zhiliao_13: -3379667101690557020
+      zhiliao_14: 7257090103819716892
+      zhiliao_2: 3508295219450813194
+      zhiliao_3: 1698903745745484200
+      zhiliao_4: 2686753212088698908
+      zhiliao_5: -6663762213397772046
+      zhiliao_6: 3192271154687814410
+      zhiliao_7: -752817448029634685
+      zhiliao_8: 2513120726404821159
+      zhiliao_9: -2956504467695653184
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

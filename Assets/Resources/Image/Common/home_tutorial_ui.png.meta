@@ -1,0 +1,689 @@
+fileFormatVersion: 2
+guid: 172e9a8d90bbf57478549a18994571a0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8404931555463586605
+    second: home_tutorial_ui_0
+  - first:
+      213: 2042121392178251783
+    second: home_tutorial_ui_1
+  - first:
+      213: 7985937590121831787
+    second: home_tutorial_ui_2
+  - first:
+      213: 781785877949632355
+    second: home_tutorial_ui_3
+  - first:
+      213: -59715310768192325
+    second: home_tutorial_ui_4
+  - first:
+      213: -1535006380967843150
+    second: home_tutorial_ui_5
+  - first:
+      213: 4033007813272728097
+    second: home_tutorial_ui_6
+  - first:
+      213: 908444909198280068
+    second: home_tutorial_ui_7
+  - first:
+      213: -2898651177397273531
+    second: home_tutorial_ui_8
+  - first:
+      213: 1590285264434601951
+    second: home_tutorial_ui_9
+  - first:
+      213: -4295128723672689250
+    second: home_tutorial_ui_10
+  - first:
+      213: -8224872457615456501
+    second: home_tutorial_ui_11
+  - first:
+      213: -8039116102513839062
+    second: home_tutorial_ui_12
+  - first:
+      213: 2419849331425304528
+    second: home_tutorial_ui_13
+  - first:
+      213: -6544771780297155288
+    second: home_tutorial_ui_14
+  - first:
+      213: 531840684506801742
+    second: home_tutorial_ui_15
+  - first:
+      213: 2252420947196531883
+    second: home_tutorial_ui_16
+  - first:
+      213: 183063898072502513
+    second: home_tutorial_ui_17
+  - first:
+      213: 3792702808587779406
+    second: home_tutorial_ui_18
+  - first:
+      213: -3905289399293095749
+    second: home_tutorial_ui_19
+  - first:
+      213: 253085500152713091
+    second: home_tutorial_ui_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  swizzle: 50462976
+  cookieLightType: 1
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: home_tutorial_ui_0
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 376
+        width: 359
+        height: 204
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ca75641be675134d8b3c57398fce51a
+      internalID: 8404931555463586605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_1
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 395
+        width: 360
+        height: 185
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09252970d85321c4d88f426abdbf7e42
+      internalID: 2042121392178251783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_2
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 514
+        width: 65
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8448437541b0b6a4c8c0652f1851a96b
+      internalID: 7985937590121831787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_3
+      rect:
+        serializedVersion: 2
+        x: 972
+        y: 503
+        width: 39
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7201e9f3f5acb344b63201085beec76
+      internalID: 781785877949632355
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_4
+      rect:
+        serializedVersion: 2
+        x: 413
+        y: 483
+        width: 20
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57f7238b620611d41a13a051404db266
+      internalID: -59715310768192325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_5
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 481
+        width: 4
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 58fb04dcdc53890459fbf7e0944d9cf7
+      internalID: -1535006380967843150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_6
+      rect:
+        serializedVersion: 2
+        x: 434
+        y: 480
+        width: 4
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 778461fd1b83ef841a81fd803db80f97
+      internalID: 4033007813272728097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_7
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 382
+        width: 210
+        height: 129
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be798fc89149bd841bd08526dbfd3ef6
+      internalID: 908444909198280068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_8
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 454
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f51db646d0eb4da4e82b647778a6329b
+      internalID: -2898651177397273531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_9
+      rect:
+        serializedVersion: 2
+        x: 379
+        y: 456
+        width: 4
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3927bf5ac039534d8ea19cb6bda5fdf
+      internalID: 1590285264434601951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_10
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 196
+        width: 214
+        height: 170
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 96a373fac985f894aa3f8fe27d5ee1e9
+      internalID: -4295128723672689250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_11
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 190
+        width: 156
+        height: 180
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c0bebfee1153e249b793f0fe6a4216b
+      internalID: -8224872457615456501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_12
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 132
+        width: 265
+        height: 245
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 14ce6ee36c0175046a30e50065925275
+      internalID: -8039116102513839062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_13
+      rect:
+        serializedVersion: 2
+        x: 698
+        y: 344
+        width: 36
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f93b063c789f7214b876c3f6b8246c52
+      internalID: 2419849331425304528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_14
+      rect:
+        serializedVersion: 2
+        x: 741
+        y: 178
+        width: 204
+        height: 196
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4560ff668eea4f64d9a352eddc3c83fd
+      internalID: -6544771780297155288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_15
+      rect:
+        serializedVersion: 2
+        x: 885
+        y: 246
+        width: 67
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13f21b6673ae57d4e9648a48cbdc3a98
+      internalID: 531840684506801742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_16
+      rect:
+        serializedVersion: 2
+        x: 946
+        y: 256
+        width: 5
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1446dd24e0d27a649aef5bc33c2af391
+      internalID: 2252420947196531883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_17
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 24
+        width: 174
+        height: 166
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2b0f06b5af2f97e4a94ce69c634726de
+      internalID: 183063898072502513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_18
+      rect:
+        serializedVersion: 2
+        x: 182
+        y: 28
+        width: 114
+        height: 158
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6532a4f07b8704f41ada9501870deda2
+      internalID: 3792702808587779406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_19
+      rect:
+        serializedVersion: 2
+        x: 306
+        y: 4
+        width: 296
+        height: 119
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 97b735a2740f4524b8f90715ec6ac317
+      internalID: -3905289399293095749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: home_tutorial_ui_20
+      rect:
+        serializedVersion: 2
+        x: 698
+        y: 18
+        width: 250
+        height: 153
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c8b720a0ba808584b82b5e3605f280fd
+      internalID: 253085500152713091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      home_tutorial_ui_0: 8404931555463586605
+      home_tutorial_ui_1: 2042121392178251783
+      home_tutorial_ui_10: -4295128723672689250
+      home_tutorial_ui_11: -8224872457615456501
+      home_tutorial_ui_12: -8039116102513839062
+      home_tutorial_ui_13: 2419849331425304528
+      home_tutorial_ui_14: -6544771780297155288
+      home_tutorial_ui_15: 531840684506801742
+      home_tutorial_ui_16: 2252420947196531883
+      home_tutorial_ui_17: 183063898072502513
+      home_tutorial_ui_18: 3792702808587779406
+      home_tutorial_ui_19: -3905289399293095749
+      home_tutorial_ui_2: 7985937590121831787
+      home_tutorial_ui_20: 253085500152713091
+      home_tutorial_ui_3: 781785877949632355
+      home_tutorial_ui_4: -59715310768192325
+      home_tutorial_ui_5: -1535006380967843150
+      home_tutorial_ui_6: 4033007813272728097
+      home_tutorial_ui_7: 908444909198280068
+      home_tutorial_ui_8: -2898651177397273531
+      home_tutorial_ui_9: 1590285264434601951
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
