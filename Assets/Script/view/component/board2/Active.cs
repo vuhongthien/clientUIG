@@ -111,7 +111,7 @@ public class Active : MonoBehaviour
     public int GiapPlayer = 0;
     public int GiapNPC = 0;
     public float noGainPercent = 0.5f;
-    public float giapPercentPerPiece = 0.05f;
+    public float giapPercentPerPiece = 0.4f;
     private int GiapPlayerActiveAtTurn = -1;   // Turn mà giáp Player bắt đầu có hiệu lực
     private int GiapNPCCreatedAtTurn = -1;
     private int GiapNPCActiveAtTurn = -1;
@@ -597,7 +597,7 @@ public class Active : MonoBehaviour
     public void CalculateOutputs(string tag, int count)
     {
         int currentAttack = IsPlayerTurn ? attackP : attackE;
-        int currenthealth = IsPlayerTurn ? maxMau : maxMauNPC;
+        int currenthealth = IsPlayerTurn ? attackP : attackE;
         int currentmana = IsPlayerTurn ? maxMana : maxManaNPC;
 
         switch (tag)
@@ -626,7 +626,26 @@ public class Active : MonoBehaviour
                         // ✅ LOGIC MỚI: Giáp bị tiêu hao khi block
                         int shieldBlock = Mathf.Min(outputKiem, GiapNPC);
                         GiapNPC -= shieldBlock; // ⭐ GIẢM GIÁP
-                        finalDamage = outputKiem - shieldBlock;
+                        int baseDamage = outputKiem - shieldBlock;
+
+                        // ✅ 2. ÁP DỤNG WEAK/STRONG
+                        float damageMultiplier = 1f;
+
+                        // Player có Weak → Tăng damage lên Boss
+                        if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier = (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
+                            Debug.Log($"[WEAK] Player weak bonus: x{damageMultiplier}");
+                        }
+
+                        // Boss có Weak → Giảm damage của Player (vì Boss kháng)
+                        if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier /= (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
+                            Debug.Log($"[RESIST] Boss resist: ÷{ManagerMatch.Instance.ePetsMatch.weaknessValue}");
+                        }
+
+                        finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
                         finalDamageDisplay = finalDamage;
                         Debug.Log($"[DAMAGE] Player Ultimate: {outputKiem} damage");
                         Debug.Log($"[SHIELD] NPC shield blocked: {shieldBlock}, Remaining: {GiapNPC}");
@@ -646,11 +665,26 @@ public class Active : MonoBehaviour
                         // ✅ LOGIC MỚI: Giáp bị tiêu hao khi block
                         int shieldBlock = Mathf.Min(outputKiem, GiapPlayer);
                         GiapPlayer -= shieldBlock; // ⭐ GIẢM GIÁP
-                        finalDamage = outputKiem - shieldBlock;
+                        int baseDamage = outputKiem - shieldBlock;
+
+                        float damageMultiplier = 1f;
+
+                        // Boss có Weak → Tăng damage lên Player
+                        if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier = (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
+                            Debug.Log($"[WEAK] Boss weak bonus: x{damageMultiplier}");
+                        }
+
+                        // Player có Weak → Giảm damage của Boss (vì Player kháng)
+                        if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier /= (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
+                            Debug.Log($"[RESIST] Player resist: ÷{ManagerMatch.Instance.uPetsMatch.weaknessValue}");
+                        }
+
+                        finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
                         finalDamageDisplay = finalDamage;
-                        Debug.Log($"[DAMAGE] NPC Ultimate: {outputKiem} damage");
-                        Debug.Log($"[SHIELD] Player shield blocked: {shieldBlock}, Remaining: {GiapPlayer}");
-                        Debug.Log($"[DAMAGE] Final damage to Player: {finalDamage}");
 
                         MauPlayer -= finalDamage;
                         NoNPC -= 100;
@@ -674,36 +708,72 @@ public class Active : MonoBehaviour
 
                     if (IsPlayerTurn)
                     {
-                        // ✅ LOGIC MỚI: Giáp bị tiêu hao khi block
+                        // ✅ 1. TÍNH DAMAGE GỐC (sau khi trừ giáp)
                         int shieldBlock = Mathf.Min(outputKiem, GiapNPC);
-                        GiapNPC -= shieldBlock; // ⭐ GIẢM GIÁP
-                        finalDamage = outputKiem - shieldBlock;
+                        GiapNPC -= shieldBlock;
+                        int baseDamage = outputKiem - shieldBlock;
+
+                        // ✅ 2. ÁP DỤNG WEAK/STRONG
+                        float damageMultiplier = 1f;
+
+                        // Player có Weak → Tăng damage lên Boss
+                        if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier = (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
+                            Debug.Log($"[WEAK] Player weak bonus: x{damageMultiplier}");
+                        }
+
+                        // Boss có Weak → Giảm damage của Player (vì Boss kháng)
+                        if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier /= (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
+                            Debug.Log($"[RESIST] Boss resist: ÷{ManagerMatch.Instance.ePetsMatch.weaknessValue}");
+                        }
+
+                        finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
                         finalDamageDisplay = finalDamage;
-                        Debug.Log($"[DAMAGE] Player Normal: {outputKiem} damage");
-                        Debug.Log($"[SHIELD] NPC shield blocked: {shieldBlock}, Remaining: {GiapNPC}");
-                        Debug.Log($"[DAMAGE] Final damage to NPC: {finalDamage}");
+
+                        Debug.Log($"[DAMAGE] Player Normal: Raw: {outputKiem} → Shield: {shieldBlock} → Base: {baseDamage} → Multiplier: x{damageMultiplier:F2} → Final: {finalDamage}");
 
                         MauNPC -= finalDamage;
                         NoNPC = Mathf.Min(NoNPC + 15, 200);
-                    }
-                    else
-                    {
-                        // ✅ LOGIC MỚI: Giáp bị tiêu hao khi block
-                        int shieldBlock = Mathf.Min(outputKiem, GiapPlayer);
-                        GiapPlayer -= shieldBlock; // ⭐ GIẢM GIÁP
-                        finalDamage = outputKiem - shieldBlock;
-                        finalDamageDisplay = finalDamage;
-                        Debug.Log($"[DAMAGE] NPC Normal: {outputKiem} damage");
-                        Debug.Log($"[SHIELD] Player shield blocked: {shieldBlock}, Remaining: {GiapPlayer}");
-                        Debug.Log($"[DAMAGE] Final damage to Player: {finalDamage}");
-
-                        MauPlayer -= finalDamage;
-                        NoPlayer = Mathf.Min(NoPlayer + 15, 200);
 
                         if (ManagerMatch.Instance != null && ManagerMatch.Instance.IsBossBattle())
                         {
                             ManagerMatch.Instance.AddBossDamage(finalDamage);
                         }
+                    }
+                    else
+                    {
+                        // ✅ 1. TÍNH DAMAGE GỐC (sau khi trừ giáp)
+                        int shieldBlock = Mathf.Min(outputKiem, GiapPlayer);
+                        GiapPlayer -= shieldBlock;
+                        int baseDamage = outputKiem - shieldBlock;
+
+                        // ✅ 2. ÁP DỤNG WEAK/STRONG
+                        float damageMultiplier = 1f;
+
+                        // Boss có Weak → Tăng damage lên Player
+                        if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier = (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
+                            Debug.Log($"[WEAK] Boss weak bonus: x{damageMultiplier}");
+                        }
+
+                        // Player có Weak → Giảm damage của Boss (vì Player kháng)
+                        if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
+                        {
+                            damageMultiplier /= (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
+                            Debug.Log($"[RESIST] Player resist: ÷{ManagerMatch.Instance.uPetsMatch.weaknessValue}");
+                        }
+
+                        finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
+                        finalDamageDisplay = finalDamage;
+
+                        Debug.Log($"[DAMAGE] NPC Normal: Raw: {outputKiem} → Shield: {shieldBlock} → Base: {baseDamage} → Multiplier: x{damageMultiplier:F2} → Final: {finalDamage}");
+
+                        MauPlayer -= finalDamage;
+                        NoPlayer = Mathf.Min(NoPlayer + 15, 200);
                     }
                 }
 
@@ -719,8 +789,9 @@ public class Active : MonoBehaviour
             case "tim Dot":
                 // ✅ TÍNH GIÁP DựA VÀO 5% MAX MÁU
                 int shieldPerPiece = IsPlayerTurn
-                    ? Mathf.RoundToInt(maxMau * giapPercentPerPiece)
-                    : Mathf.RoundToInt(maxMauNPC * giapPercentPerPiece);
+                    ? Mathf.RoundToInt(attackP * giapPercentPerPiece)
+                    : Mathf.RoundToInt(attackE * giapPercentPerPiece);
+                Debug.Log($"[SHIELD] Shield per piece: {shieldPerPiece}");
 
                 outputGiap = shieldPerPiece * count;
 
@@ -848,7 +919,7 @@ public class Active : MonoBehaviour
                 break;
 
             case "xanh Dot":
-                outputMau = Mathf.RoundToInt(currenthealth * 0.05f * count);
+                outputMau = Mathf.RoundToInt(currenthealth * 0.2f * count);
                 if (IsPlayerTurn)
                 {
                     playerPetAnimator.SetInteger("key", 3);
@@ -1007,73 +1078,73 @@ public class Active : MonoBehaviour
     }
 
     public void UpdateSlider()
-{
-    // Clamp values
-    MauPlayer = Mathf.Max(0, MauPlayer);
-    NoPlayer = Mathf.Max(0, NoPlayer);
-    ManaPlayer = Mathf.Max(0, ManaPlayer);
-    MauNPC = Mathf.Max(0, MauNPC);
-    NoNPC = Mathf.Max(0, NoNPC);
-    ManaNPC = Mathf.Max(0, ManaNPC);
-
-    float smoothTime = 0.15f;
-
-    // ✅ DÙNG LEANTWEEN (TỰ ĐỘNG CANCEL NẾU GỌI LẠI)
-    if (thanhMauSlider != null)
     {
-        LeanTween.cancel(thanhMauSlider.gameObject);
-        LeanTween.value(thanhMauSlider.gameObject, thanhMauSlider.value, MauPlayer, smoothTime)
-            .setOnUpdate((float val) => thanhMauSlider.value = val);
-    }
-    if (textMauPlayer != null)
-        textMauPlayer.text = $"{MauPlayer}/{maxMau}";
+        // Clamp values
+        MauPlayer = Mathf.Max(0, MauPlayer);
+        NoPlayer = Mathf.Max(0, NoPlayer);
+        ManaPlayer = Mathf.Max(0, ManaPlayer);
+        MauNPC = Mathf.Max(0, MauNPC);
+        NoNPC = Mathf.Max(0, NoNPC);
+        ManaNPC = Mathf.Max(0, ManaNPC);
 
-    if (thanhNoSlider != null)
-    {
-        LeanTween.cancel(thanhNoSlider.gameObject);
-        LeanTween.value(thanhNoSlider.gameObject, thanhNoSlider.value, NoPlayer, smoothTime)
-            .setOnUpdate((float val) => thanhNoSlider.value = val);
-    }
-    if (textNoPlayer != null)
-        textNoPlayer.text = $"{NoPlayer}/{maxNo}";
+        float smoothTime = 0.15f;
 
-    if (thanhManaSlider != null)
-    {
-        LeanTween.cancel(thanhManaSlider.gameObject);
-        LeanTween.value(thanhManaSlider.gameObject, thanhManaSlider.value, ManaPlayer, smoothTime)
-            .setOnUpdate((float val) => thanhManaSlider.value = val);
-    }
-    if (textManaPlayer != null)
-        textManaPlayer.text = $"{ManaPlayer}/{maxMana}";
+        // ✅ DÙNG LEANTWEEN (TỰ ĐỘNG CANCEL NẾU GỌI LẠI)
+        if (thanhMauSlider != null)
+        {
+            LeanTween.cancel(thanhMauSlider.gameObject);
+            LeanTween.value(thanhMauSlider.gameObject, thanhMauSlider.value, MauPlayer, smoothTime)
+                .setOnUpdate((float val) => thanhMauSlider.value = val);
+        }
+        if (textMauPlayer != null)
+            textMauPlayer.text = $"{MauPlayer}/{maxMau}";
 
-    // Tương tự cho NPC...
-    if (thanhMauNPC != null)
-    {
-        LeanTween.cancel(thanhMauNPC.gameObject);
-        LeanTween.value(thanhMauNPC.gameObject, thanhMauNPC.value, MauNPC, smoothTime)
-            .setOnUpdate((float val) => thanhMauNPC.value = val);
-    }
-    if (textMauNPC != null)
-        textMauNPC.text = $"{MauNPC}/{maxMauNPC}";
+        if (thanhNoSlider != null)
+        {
+            LeanTween.cancel(thanhNoSlider.gameObject);
+            LeanTween.value(thanhNoSlider.gameObject, thanhNoSlider.value, NoPlayer, smoothTime)
+                .setOnUpdate((float val) => thanhNoSlider.value = val);
+        }
+        if (textNoPlayer != null)
+            textNoPlayer.text = $"{NoPlayer}/{maxNo}";
 
-    if (thanhNoNPC != null)
-    {
-        LeanTween.cancel(thanhNoNPC.gameObject);
-        LeanTween.value(thanhNoNPC.gameObject, thanhNoNPC.value, NoNPC, smoothTime)
-            .setOnUpdate((float val) => thanhNoNPC.value = val);
-    }
-    if (textNoNPC != null)
-        textNoNPC.text = $"{NoNPC}/{maxNoNPC}";
+        if (thanhManaSlider != null)
+        {
+            LeanTween.cancel(thanhManaSlider.gameObject);
+            LeanTween.value(thanhManaSlider.gameObject, thanhManaSlider.value, ManaPlayer, smoothTime)
+                .setOnUpdate((float val) => thanhManaSlider.value = val);
+        }
+        if (textManaPlayer != null)
+            textManaPlayer.text = $"{ManaPlayer}/{maxMana}";
 
-    if (thanhManaNPC != null)
-    {
-        LeanTween.cancel(thanhManaNPC.gameObject);
-        LeanTween.value(thanhManaNPC.gameObject, thanhManaNPC.value, ManaNPC, smoothTime)
-            .setOnUpdate((float val) => thanhManaNPC.value = val);
+        // Tương tự cho NPC...
+        if (thanhMauNPC != null)
+        {
+            LeanTween.cancel(thanhMauNPC.gameObject);
+            LeanTween.value(thanhMauNPC.gameObject, thanhMauNPC.value, MauNPC, smoothTime)
+                .setOnUpdate((float val) => thanhMauNPC.value = val);
+        }
+        if (textMauNPC != null)
+            textMauNPC.text = $"{MauNPC}/{maxMauNPC}";
+
+        if (thanhNoNPC != null)
+        {
+            LeanTween.cancel(thanhNoNPC.gameObject);
+            LeanTween.value(thanhNoNPC.gameObject, thanhNoNPC.value, NoNPC, smoothTime)
+                .setOnUpdate((float val) => thanhNoNPC.value = val);
+        }
+        if (textNoNPC != null)
+            textNoNPC.text = $"{NoNPC}/{maxNoNPC}";
+
+        if (thanhManaNPC != null)
+        {
+            LeanTween.cancel(thanhManaNPC.gameObject);
+            LeanTween.value(thanhManaNPC.gameObject, thanhManaNPC.value, ManaNPC, smoothTime)
+                .setOnUpdate((float val) => thanhManaNPC.value = val);
+        }
+        if (textManaNPC != null)
+            textManaNPC.text = $"{ManaNPC}/{maxManaNPC}";
     }
-    if (textManaNPC != null)
-        textManaNPC.text = $"{ManaNPC}/{maxManaNPC}";
-}
 
 
     private void OnDestroy()
@@ -1171,7 +1242,7 @@ public class Active : MonoBehaviour
     public void CalculateOutputsWithoutAnimation(string tag, int count)
     {
         int currentAttack = IsPlayerTurn ? attackP : attackE;
-        int currenthealth = IsPlayerTurn ? maxMau : maxMauNPC;
+        int currenthealth = IsPlayerTurn ? attackP : attackE;
         int currentmana = IsPlayerTurn ? maxMana : maxManaNPC;
 
         switch (tag)
@@ -1180,8 +1251,8 @@ public class Active : MonoBehaviour
             case "tim Dot":
                 // ✅ TÍNH GIÁP DựA VÀO 5% MAX MÁU
                 int shieldPerPieceNoAnim = IsPlayerTurn
-                    ? Mathf.RoundToInt(maxMau * giapPercentPerPiece)
-                    : Mathf.RoundToInt(maxMauNPC * giapPercentPerPiece);
+                    ? Mathf.RoundToInt(attackP * giapPercentPerPiece)
+                    : Mathf.RoundToInt(attackE * giapPercentPerPiece);
 
                 outputGiap = shieldPerPieceNoAnim * count;
 
@@ -1278,7 +1349,7 @@ public class Active : MonoBehaviour
                 break;
 
             case "xanh Dot":
-                outputMau = Mathf.RoundToInt(currenthealth * 0.05f * count);
+                outputMau = Mathf.RoundToInt(currenthealth * 0.2f * count);
                 if (IsPlayerTurn)
                 {
                     // ❌ BỎ animation

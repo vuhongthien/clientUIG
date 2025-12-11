@@ -23007,7 +23007,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 0}
   m_FillRect: {fileID: 1178506791}
   m_HandleRect: {fileID: 0}
@@ -33384,6 +33384,12 @@ MonoBehaviour:
   managerEquipment: {fileID: 786270597}
   HC: {fileID: 1804145791}
   imgAvatar: {fileID: 852666446}
+  bgmAudioSource: {fileID: 0}
+  bgmClip: {fileID: 8300000, guid: 9cc372ffb8a22524abb4221afc71c3f5, type: 3}
+  bgmVolume: 0.5
+  loopBGM: 1
+  clickSound: {fileID: 8300000, guid: ddd16025d5ef32249bf91ac485f99fd8, type: 3}
+  clickVolume: 0.7
 --- !u!114 &786270583
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37461,11 +37467,11 @@ AudioSource:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 893394971}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 09012c5d7cd9f9c4194ad23ae2827b45, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 8ab9f96308f525a49a7ac7a50256d6ed, type: 3}
+  m_Resource: {fileID: 8300000, guid: 8ab9f96308f525a49a7ac7a50256d6ed, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.29
   m_Pitch: 1
@@ -37569,8 +37575,8 @@ MonoBehaviour:
   wheelCircle: {fileID: 1502604430}
   wheelPiecePrefab: {fileID: 1013547879587396, guid: a10fef7bc23b5a64a929387e97c9b936, type: 3}
   wheelPiecesParent: {fileID: 1102167054}
-  audioSource: {fileID: 0}
-  tickAudioClip: {fileID: 0}
+  audioSource: {fileID: 893394973}
+  tickAudioClip: {fileID: 8300000, guid: 8ab9f96308f525a49a7ac7a50256d6ed, type: 3}
   volume: 0.5
   pitch: 1
   spinDuration: 3
@@ -90498,7 +90504,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5275603124659232049, guid: ce944ffd19dce104da5ec4930aabac30, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -229.19304
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5275603124659232049, guid: ce944ffd19dce104da5ec4930aabac30, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -90522,7 +90528,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5600263310736738672, guid: ce944ffd19dce104da5ec4930aabac30, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 232.50696
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5600263310736738672, guid: ce944ffd19dce104da5ec4930aabac30, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -90542,7 +90548,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6329025188730590312, guid: ce944ffd19dce104da5ec4930aabac30, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.6569824
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6329025188730590312, guid: ce944ffd19dce104da5ec4930aabac30, type: 3}
       propertyPath: m_AnchoredPosition.x

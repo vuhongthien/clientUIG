@@ -619,6 +619,7 @@ public class ShopManager : MonoBehaviour
     }
 
     // ANIMATION: Display pets với slide in effect
+    // ANIMATION: Display pets với slide in effect + Load Pet Animations
     IEnumerator DisplayPetsAnimated()
     {
         int startIndex = currentPage * 3;
@@ -633,10 +634,12 @@ public class ShopManager : MonoBehaviour
 
                 if (petImages[i] != null)
                 {
-                    Sprite petSprite = Resources.Load<Sprite>("Image/IconsPet/" + pet.id);
-                    if (petSprite != null) petImages[i].sprite = petSprite;
                     petImages[i].gameObject.SetActive(true);
 
+                    // Setup pet animation giống ManagerTop
+                    TrySetupPetAnimation(petImages[i], pet.id.ToString());
+
+                    // Slide in animation
                     RectTransform rt = petImages[i].GetComponent<RectTransform>();
                     if (rt != null)
                     {
@@ -652,7 +655,6 @@ public class ShopManager : MonoBehaviour
                 if (petMana[i] != null) petMana[i].text = pet.mana.ToString();
                 if (petHp[i] != null) petHp[i].text = pet.hp.ToString();
 
-                // SỬA: Không cần ref cachedObject nữa
                 GameObject dummy = null;
                 SetPriceWithPrefab(petPrice[i], pet.price, pet.currencyType, ref dummy, !pet.canPurchase);
 
@@ -673,6 +675,107 @@ public class ShopManager : MonoBehaviour
             }
 
             yield return new WaitForSeconds(0.05f);
+        }
+    }
+
+    // Copy hàm TrySetupPetAnimation từ ManagerTop
+    bool TrySetupPetAnimation(Image petImage, string petID)
+    {
+        if (petImage == null)
+        {
+            Debug.LogWarning("[ShopManager] petImage is null");
+            return false;
+        }
+
+        try
+        {
+            // BƯỚC 1: LUÔN LUÔN set image trước làm backup
+            // Load và set sprite từ Resources/Image/IconsPet
+            string spritePath = $"Image/IconsPet/{petID}";
+            Sprite petSprite = Resources.Load<Sprite>(spritePath);
+
+            if (petSprite != null)
+            {
+                petImage.sprite = petSprite;
+                petImage.enabled = true; // LUÔN ENABLED!
+                Debug.Log($"[ShopManager Pet {petID}] ✓ Set image backup: {spritePath}");
+            }
+            else
+            {
+                Debug.LogWarning($"[ShopManager Pet {petID}] Không tìm thấy icon tại {spritePath}");
+            }
+
+            // BƯỚC 2: Thử load animation IdleT
+            string clipPath = $"Pets/{petID}/IdleT";
+            AnimationClip idleClip = Resources.Load<AnimationClip>(clipPath);
+
+            Debug.Log($"[ShopManager Pet {petID}] Loading animation from: {clipPath}");
+
+            if (idleClip == null)
+            {
+                Debug.LogWarning($"[ShopManager Pet {petID}] Không tìm thấy IdleT clip - Dùng image tĩnh");
+
+                // Đảm bảo không có Animator hoặc tắt nó đi
+                Animator petAnimator = petImage.GetComponent<Animator>();
+                if (petAnimator != null)
+                {
+                    petAnimator.enabled = false;
+                }
+                return true;
+            }
+
+            // BƯỚC 3: Có animation thì setup Animator
+            Animator animator = petImage.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = petImage.gameObject.AddComponent<Animator>();
+                Debug.Log($"[ShopManager Pet {petID}] Added Animator component");
+            }
+
+            RuntimeAnimatorController baseController = animator.runtimeAnimatorController;
+
+            if (baseController == null)
+            {
+                Debug.LogWarning($"[ShopManager Pet {petID}] Animator không có base controller! Cần gán trong Inspector.");
+                animator.enabled = false;
+                return true;
+            }
+
+            Debug.Log($"[ShopManager Pet {petID}] Base controller: {baseController.name}");
+
+            AnimatorOverrideController overrideController = new AnimatorOverrideController(baseController);
+            overrideController.name = $"ShopOverride_{petID}_{animator.GetInstanceID()}";
+
+            // Override clip IdleT
+            Debug.Log($"[ShopManager Pet {petID}] Override clip: IdleT (length: {idleClip.length}s)");
+            overrideController["IdleT"] = idleClip;
+
+            // Apply override controller
+            animator.runtimeAnimatorController = overrideController;
+            animator.enabled = true;
+
+            // KHÔNG TẮT IMAGE - Để làm backup nếu animation lỗi!
+            // petImage.enabled vẫn = true
+
+            // Force refresh animator
+            animator.Rebind();
+            animator.Update(0f);
+
+            // Ensure GameObject active
+            if (!animator.gameObject.activeSelf)
+            {
+                animator.gameObject.SetActive(true);
+                Debug.Log($"[ShopManager Pet {petID}] Activated GameObject");
+            }
+
+            Debug.Log($"[ShopManager Pet {petID}] ✓ Setup thành công IdleT animation (Image làm backup)");
+
+            return true;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[ShopManager Pet {petID}] Lỗi: {e.Message}\n{e.StackTrace}");
+            return false;
         }
     }
 

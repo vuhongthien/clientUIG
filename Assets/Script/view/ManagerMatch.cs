@@ -35,6 +35,8 @@ public class ManagerMatch : MonoBehaviour
     private bool isBossBattle = false;
     private long currentBossScheduleId;
     private int totalDamageDealt = 0;
+    public PetUserDTO uPetsMatch;
+    public PetUserDTO ePetsMatch;
     public static ManagerMatch Instance;
     private void Awake()
     {
@@ -186,6 +188,7 @@ public class ManagerMatch : MonoBehaviour
 
     void OnEPetsReceived(PetUserDTO pets)
     {
+        ePetsMatch = pets;
         txtHpEnemy.text = pets.hp.ToString() + "/" + (pets.hp + (pets.hp * 70 / 100));
         txtManaEnemy.text = 0 + "/" + (pets.mana + 200);
         txtPowerEnemy.text = 0 + "/" + 200;
@@ -220,6 +223,7 @@ public class ManagerMatch : MonoBehaviour
 
     void OnPetsReceived(PetUserDTO pets)
     {
+        uPetsMatch = pets;
         txtHpUser.text = pets.hp.ToString() + "/" + (pets.hp + (pets.hp * 70 / 100));
         txtManaUser.text = 0 + "/" + (pets.mana + 200);
         txtPowerUser.text = 0 + "/" + 200;

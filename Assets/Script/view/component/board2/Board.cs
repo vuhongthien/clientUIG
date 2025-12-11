@@ -733,36 +733,55 @@ public class Board : MonoBehaviour
     // ==================== MATCH DESTRUCTION ====================
 
     private void DestroyMatchesAt(int column, int row)
+{
+    isDestroyingMatches = true;
+
+    if (isDestroyingMatches)
     {
-        isDestroyingMatches = true;
-
-        if (isDestroyingMatches)
+        if (active != null)
         {
-            if (active != null)
+            active.PauseTurn();
+
+            if (allDots[column, row] != null && allDots[column, row].GetComponent<Dot>().isMathched)
             {
-                active.PauseTurn();
+                GameObject dotToDestroy = allDots[column, row];
+                string dotTag = dotToDestroy.tag.ToString();
 
-                if (allDots[column, row] != null && allDots[column, row].GetComponent<Dot>().isMathched)
+                // ✅ PHÁT ÂM THANH KHI PHÁ VIÊN
+                if (AudioManager.Instance != null)
                 {
-                    string dotTag = allDots[column, row].tag.ToString();
-
-                    if (destroyedCountByTag.ContainsKey(dotTag))
-                    {
-                        destroyedCountByTag[dotTag]++;
-                    }
-                    else
-                    {
-                        destroyedCountByTag[dotTag] = 1;
-                    }
-
-                    findMaches.currentMatches.Remove(allDots[column, row]);
-                    Destroy(allDots[column, row]);
-                    allDots[column, row] = null;
-                    destroyedCount++;
+                    AudioManager.Instance.PlayMatchSound(dotTag);
                 }
+
+                // ✅ CẬP NHẬT COUNTER
+                if (destroyedCountByTag.ContainsKey(dotTag))
+                {
+                    destroyedCountByTag[dotTag]++;
+                }
+                else
+                {
+                    destroyedCountByTag[dotTag] = 1;
+                }
+
+                findMaches.currentMatches.Remove(dotToDestroy);
+                destroyedCount++;
+
+                // ✅ CHẠY HIỆU ỨNG MỜ DẦN + SCALE TRƯỚC KHI DESTROY
+                DotDestroyEffect.PlayEffect(dotToDestroy, () =>
+                {
+                    // Callback sau khi hiệu ứng hoàn thành
+                    if (dotToDestroy != null)
+                    {
+                        Destroy(dotToDestroy);
+                    }
+                });
+
+                // Set null ngay để tránh xử lý lại
+                allDots[column, row] = null;
             }
         }
     }
+}
 
     private void ResetDestroyedCounts()
     {
@@ -775,23 +794,27 @@ public class Board : MonoBehaviour
     }
 
     public IEnumerator WaitAndDestroyMatches()
-    {
-        currentState = GameState.wait;
+{
+    currentState = GameState.wait;
 
-        for (int i = 0; i < width; i++)
+    // Phá tất cả viên match
+    for (int i = 0; i < width; i++)
+    {
+        for (int j = 0; j < height; j++)
         {
-            for (int j = 0; j < height; j++)
+            if (allDots[i, j] != null)
             {
-                if (allDots[i, j] != null)
-                {
-                    DestroyMatchesAt(i, j);
-                }
+                DestroyMatchesAt(i, j);
             }
         }
-
-        StartCoroutine(DecreaseRowCo());
-        yield return new WaitForSeconds(1f);
     }
+
+    // ✅ ĐỢI ANIMATION FADE + SCALE HOÀN THÀNH (duration = 0.3s)
+    yield return new WaitForSeconds(0.25f);
+
+    StartCoroutine(DecreaseRowCo());
+    yield return new WaitForSeconds(1f);
+}
 
     public void DestroyMatches()
     {
@@ -869,7 +892,7 @@ public class Board : MonoBehaviour
             }
             nullCount = 0;
         }
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(.4f);
         StartCoroutine(FillBoardCo());
     }
 
@@ -915,13 +938,13 @@ public class Board : MonoBehaviour
     private IEnumerator FillBoardCo()
     {
         RefillBoard();
-        yield return new WaitForSeconds(.5f);
+        yield return new WaitForSeconds(.8f);
 
         while (MatchesOnBoard())
         {
-            yield return new WaitForSeconds(.2f);
+            yield return new WaitForSeconds(.3f);
             DestroyMatches();
-            yield return new WaitForSeconds(.4f);
+            yield return new WaitForSeconds(.6f);
         }
 
         yield return new WaitForSeconds(.4f);
@@ -1055,7 +1078,7 @@ public class Board : MonoBehaviour
 
             // 🎬 BẮT ĐẦU ANIMATION HEAL
             StartCoroutine(active.SetAnimationForItem("xanh Dot"));
-            yield return new WaitForSeconds(0.15f); // Đợi animation khởi động
+            yield return new WaitForSeconds(0.3f); // Đợi animation khởi động
 
             // Hiển thị từng hiệu ứng heal
             foreach (string healType in healOrder)
@@ -1064,12 +1087,12 @@ public class Board : MonoBehaviour
                 {
                     yield return StartCoroutine(active.OutputsParam(healType));
                     active.UpdateSlider();
-                    yield return new WaitForSeconds(0.1f); // Spacing giữa các heal
+                    yield return new WaitForSeconds(0.2f); // Spacing giữa các heal
                 }
             }
 
             // 🎬 KẾT THÚC ANIMATION HEAL
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.4f);
             if (active.IsPlayerTurn && active.playerPetAnimator != null)
                 active.playerPetAnimator.SetInteger("key", 0);
             else if (active.IsNPCTurn && active.bossPetAnimator != null)
@@ -1098,7 +1121,7 @@ public class Board : MonoBehaviour
             yield return StartCoroutine(active.OutputsParam("vang Dot"));
 
             // 🎬 RESET ANIMATION
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.3f);
             if (active.IsPlayerTurn && active.playerPetAnimator != null)
                 active.playerPetAnimator.SetInteger("key", 0);
             else if (active.IsNPCTurn && active.bossPetAnimator != null)

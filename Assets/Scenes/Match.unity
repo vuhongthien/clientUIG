@@ -6466,7 +6466,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 5723764819945612377, guid: 21df6c55278e37b4a8b391889469d5cb, type: 3}
+  m_Sprite: {fileID: 2686753212088698908, guid: 7e847a6c537346342b81d12d05dc0987, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -10242,7 +10242,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 90
+  m_Text: 
 --- !u!222 &1766362590
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12407,6 +12407,7 @@ GameObject:
   - component: {fileID: 2141090636}
   - component: {fileID: 2141090637}
   - component: {fileID: 2141090638}
+  - component: {fileID: 2141090639}
   m_Layer: 5
   m_Name: CanvasAnimation
   m_TagString: Untagged
@@ -12565,6 +12566,72 @@ MonoBehaviour:
     red: 0
     yellow: 0
     white: 0
+  uPetsMatch:
+    id: 0
+    userId: 0
+    petId: 0
+    skillCardId: 0
+    name: 
+    des: 
+    elementType: 
+    elementOther: 
+    level: 0
+    maxLevel: 0
+    hp: 0
+    attack: 0
+    mana: 0
+    weaknessValue: 0
+    manaSkillCard: 0
+    cardDTO:
+      id: 0
+      cardId: 0
+      name: 
+      description: 
+      elementTypeCard: 
+      value: 0
+      maxLevel: 0
+      count: 0
+      level: 0
+      conditionUse: 0
+      power: 0
+      green: 0
+      blue: 0
+      red: 0
+      yellow: 0
+      white: 0
+  ePetsMatch:
+    id: 0
+    userId: 0
+    petId: 0
+    skillCardId: 0
+    name: 
+    des: 
+    elementType: 
+    elementOther: 
+    level: 0
+    maxLevel: 0
+    hp: 0
+    attack: 0
+    mana: 0
+    weaknessValue: 0
+    manaSkillCard: 0
+    cardDTO:
+      id: 0
+      cardId: 0
+      name: 
+      description: 
+      elementTypeCard: 
+      value: 0
+      maxLevel: 0
+      count: 0
+      level: 0
+      conditionUse: 0
+      power: 0
+      green: 0
+      blue: 0
+      red: 0
+      yellow: 0
+      white: 0
 --- !u!114 &2141090637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12590,6 +12657,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcd55459820fc334a8257a43953fb23f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2141090639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2141090630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e23ab1c4036388d41b8d020e5fd0570d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bgmSource: {fileID: 0}
+  sfxSource: {fileID: 0}
+  backgroundMusics:
+  - {fileID: 8300000, guid: 86f071ef6affe1c4c94a5eee27719b10, type: 3}
+  - {fileID: 8300000, guid: 618ae5e57093ad34cbf7a14791c9e6b6, type: 3}
+  - {fileID: 8300000, guid: 2992ab89eb859a64e92ec6795211f0b1, type: 3}
+  - {fileID: 8300000, guid: ecbc677d89e3d5c4bb02b29f82a9014e, type: 3}
+  - {fileID: 8300000, guid: ce61364eddbd7434e8596450cd9a81d9, type: 3}
+  matchSounds:
+  - {fileID: 8300000, guid: 6f11885001759f94789a7fe436122e05, type: 3}
+  - {fileID: 8300000, guid: ad3871a6cf693a8408c6f4b40bcf8e16, type: 3}
+  - {fileID: 8300000, guid: 33e65c59b273be24e920d57bf9710a80, type: 3}
+  - {fileID: 8300000, guid: f548e2b27b6b8534b911ea33eef32df4, type: 3}
+  - {fileID: 8300000, guid: 0aae5079ad974904cb0e28a3b4cbc602, type: 3}
+  - {fileID: 8300000, guid: d0becc40741f83745bbafb65da48a537, type: 3}
+  swordClickSound: {fileID: 8300000, guid: 9abb3a81b78d7cb4e8e1e42cad3709ef, type: 3}
+  bgmVolume: 0.5
+  sfxVolume: 0.8
+  currentBGMIndex: -1
+  comboPitchIncrement: 0.1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
