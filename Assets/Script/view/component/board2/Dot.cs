@@ -1,6 +1,7 @@
 ﻿using Photon.Pun;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Dot script hợp nhất hỗ trợ cả PVP (Photon) và Single Player
@@ -40,6 +41,8 @@ public class Dot : MonoBehaviourPun
     private static Dot firstSelectedDot = null;
     private Color originalColor;
     private bool isSelected = false;
+    public int multiplier = 1; // Số lượng viên (1, 2, hoặc 3)
+    public Text multiplierText;
 
     void Start()
     {

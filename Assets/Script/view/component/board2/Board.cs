@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.Rendering.Universal.Internal;
 
 public enum GameState
 {
@@ -87,7 +88,7 @@ public class Board : MonoBehaviour
     public GameObject itemRewardStone;
     public GameObject itemRewardPet;
     public GameObject itemRewardCT;
-    
+
     public GameObject itemRewardGold;
     public GameObject itemRewardEXP;
     public Text txtResultTitle;
@@ -129,6 +130,7 @@ public class Board : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
     private List<GameObject> cardsInHand = new List<GameObject>();
     public CardData cardData;
+    public int HOTTURN = 15;
 
     public static Board Instance { get; private set; }
 
@@ -733,55 +735,56 @@ public class Board : MonoBehaviour
     // ==================== MATCH DESTRUCTION ====================
 
     private void DestroyMatchesAt(int column, int row)
-{
-    isDestroyingMatches = true;
-
-    if (isDestroyingMatches)
     {
-        if (active != null)
+        isDestroyingMatches = true;
+
+        if (isDestroyingMatches)
         {
-            active.PauseTurn();
-
-            if (allDots[column, row] != null && allDots[column, row].GetComponent<Dot>().isMathched)
+            if (active != null)
             {
-                GameObject dotToDestroy = allDots[column, row];
-                string dotTag = dotToDestroy.tag.ToString();
+                active.PauseTurn();
 
-                // ✅ PHÁT ÂM THANH KHI PHÁ VIÊN
-                if (AudioManager.Instance != null)
+                if (allDots[column, row] != null && allDots[column, row].GetComponent<Dot>().isMathched)
                 {
-                    AudioManager.Instance.PlayMatchSound(dotTag);
-                }
+                    GameObject dotToDestroy = allDots[column, row];
+                    Dot dotComponent = dotToDestroy.GetComponent<Dot>();
+                    string dotTag = dotToDestroy.tag.ToString();
 
-                // ✅ CẬP NHẬT COUNTER
-                if (destroyedCountByTag.ContainsKey(dotTag))
-                {
-                    destroyedCountByTag[dotTag]++;
-                }
-                else
-                {
-                    destroyedCountByTag[dotTag] = 1;
-                }
-
-                findMaches.currentMatches.Remove(dotToDestroy);
-                destroyedCount++;
-
-                // ✅ CHẠY HIỆU ỨNG MỜ DẦN + SCALE TRƯỚC KHI DESTROY
-                DotDestroyEffect.PlayEffect(dotToDestroy, () =>
-                {
-                    // Callback sau khi hiệu ứng hoàn thành
-                    if (dotToDestroy != null)
+                    // ✅ PHÁT ÂM THANH
+                    if (AudioManager.Instance != null)
                     {
-                        Destroy(dotToDestroy);
+                        AudioManager.Instance.PlayMatchSound(dotTag);
                     }
-                });
 
-                // Set null ngay để tránh xử lý lại
-                allDots[column, row] = null;
+                    // ✅ CẬP NHẬT COUNTER VỚI MULTIPLIER
+                    int countToAdd = dotComponent != null ? dotComponent.multiplier : 1;
+
+                    if (destroyedCountByTag.ContainsKey(dotTag))
+                    {
+                        destroyedCountByTag[dotTag] += countToAdd;
+                    }
+                    else
+                    {
+                        destroyedCountByTag[dotTag] = countToAdd;
+                    }
+
+                    findMaches.currentMatches.Remove(dotToDestroy);
+                    destroyedCount += countToAdd;
+
+                    // ✅ HIỆU ỨNG PHÁ HUỶ
+                    DotDestroyEffect.PlayEffect(dotToDestroy, () =>
+                    {
+                        if (dotToDestroy != null)
+                        {
+                            Destroy(dotToDestroy);
+                        }
+                    });
+
+                    allDots[column, row] = null;
+                }
             }
         }
     }
-}
 
     private void ResetDestroyedCounts()
     {
@@ -794,26 +797,26 @@ public class Board : MonoBehaviour
     }
 
     public IEnumerator WaitAndDestroyMatches()
-{
-    currentState = GameState.wait;
-
-    // Phá tất cả viên match
-    for (int i = 0; i < width; i++)
     {
-        for (int j = 0; j < height; j++)
+        currentState = GameState.wait;
+
+        // Phá tất cả viên match
+        for (int i = 0; i < width; i++)
         {
-            if (allDots[i, j] != null)
+            for (int j = 0; j < height; j++)
             {
-                DestroyMatchesAt(i, j);
+                if (allDots[i, j] != null)
+                {
+                    DestroyMatchesAt(i, j);
+                }
             }
         }
+
+        // ✅ ĐỢI ANIMATION FADE + SCALE HOÀN THÀNH (duration = 0.3s)
+        yield return new WaitForSeconds(0.25f);
+
+        StartCoroutine(DecreaseRowCo());
     }
-
-    // ✅ ĐỢI ANIMATION FADE + SCALE HOÀN THÀNH (duration = 0.3s)
-    yield return new WaitForSeconds(0.25f);
-
-    StartCoroutine(DecreaseRowCo());
-}
 
     public void DestroyMatches()
     {
@@ -896,36 +899,152 @@ public class Board : MonoBehaviour
     }
 
     private void RefillBoard()
-{
-    for (int i = 0; i < width; i++)
     {
-        for (int j = 0; j < height; j++)
+        bool isAfterTurn20 = (active != null && active.TurnNumber >= HOTTURN);
+        Debug.Log("isAfterTurn20: " + isAfterTurn20);
+        for (int i = 0; i < width; i++)
         {
-            if (allDots[i, j] == null)
+            for (int j = 0; j < height; j++)
             {
-                Vector2 tempPosition = new Vector2(i, j + offSet);
-                
-                // ✅ THÊM: Tránh spawn viên tạo match ngay
-                int dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                int maxAttempts = 100;
-                int attempts = 0;
-                
-                while (MatchesAt(i, j, dots[dotToUse]) && attempts < maxAttempts)
+                if (allDots[i, j] == null)
                 {
-                    dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                    attempts++;
+                    Vector2 tempPosition = new Vector2(i, j + offSet);
+
+                    int dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                    int maxAttempts = 100;
+                    int attempts = 0;
+
+                    while (MatchesAt(i, j, dots[dotToUse]) && attempts < maxAttempts)
+                    {
+                        dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                        attempts++;
+                    }
+
+                    GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
+                    allDots[i, j] = piece;
+
+                    Dot dotComponent = piece.GetComponent<Dot>();
+                    dotComponent.row = j;
+                    dotComponent.column = i;
+                    piece.transform.parent = this.transform;
+                    piece.name = "(" + i + "," + j + ")";
+
+                    // ✅ LOGIC MỚI: Sau turn 20 có thể spawn viên x2 hoặc x3
+                    if (isAfterTurn20)
+                    {
+                        float roll = UnityEngine.Random.Range(0f, 100f);
+
+                        if (roll < 5f) // 5% chance x3
+                        {
+                            dotComponent.multiplier = 3;
+                            CreateMultiplierText(piece, 3);
+                        }
+                        else if (roll < 15f) // 15%
+                        {
+                            dotComponent.multiplier = 2;
+                            CreateMultiplierText(piece, 2);
+                        }
+                        // 55% còn lại = x1 (không có text)
+                    }
                 }
-                
-                GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
-                allDots[i, j] = piece;
-                piece.GetComponent<Dot>().row = j;
-                piece.GetComponent<Dot>().column = i;
-                piece.transform.parent = this.transform;
-                piece.name = "(" + i + "," + j + ")";
             }
         }
     }
-}
+    /// <summary>
+    /// Tạo text hiển thị multiplier trên viên
+    /// </summary>
+    /// <summary>
+    /// Tạo text hiển thị multiplier trên viên
+    /// </summary>
+    private void CreateMultiplierText(GameObject dot, int multiplier)
+    {
+        // Tạo Canvas child
+        GameObject canvasObj = new GameObject("MultiplierCanvas");
+        canvasObj.transform.SetParent(dot.transform);
+        canvasObj.transform.localPosition = Vector3.zero;
+        canvasObj.transform.localScale = Vector3.one; // Giữ scale = 1 tại canvas level
+        canvasObj.transform.localRotation = Quaternion.identity;
+
+        Canvas canvas = canvasObj.AddComponent<Canvas>();
+        canvas.overrideSorting = true;
+        canvas.sortingLayerName = "Default";
+        canvas.sortingOrder = 2;
+        canvas.renderMode = RenderMode.WorldSpace;
+
+        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+        scaler.dynamicPixelsPerUnit = 10;
+
+        canvasObj.AddComponent<GraphicRaycaster>();
+
+        RectTransform canvasRect = canvasObj.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(100, 100);
+
+        // Tạo Text
+        GameObject textObj = new GameObject("MultiplierText");
+        textObj.transform.SetParent(canvasObj.transform);
+        textObj.transform.localRotation = Quaternion.identity;
+
+        // ✅ SET SCALE = 0.01 như trong ảnh
+        textObj.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
+
+        Text text = textObj.AddComponent<Text>();
+        text.text = "x" + multiplier.ToString();
+
+        // Load font
+        Font customFont = Resources.Load<Font>("font/UTM Erie Black");
+        if (customFont != null)
+        {
+            text.font = customFont;
+        }
+        else
+        {
+            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        }
+
+        text.fontSize = 35;
+        text.fontStyle = FontStyle.Bold;
+        text.color = Color.yellow;
+        text.alignment = TextAnchor.MiddleCenter;
+        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
+
+        if (text.material == null)
+        {
+            text.material = Resources.GetBuiltinResource<Material>("UI/Default.mat");
+        }
+
+        // Outline màu #FF00C2
+        Outline outline = textObj.AddComponent<Outline>();
+        Color outlineColor;
+        if (ColorUtility.TryParseHtmlString("#FF00C2", out outlineColor))
+        {
+            outline.effectColor = outlineColor;
+        }
+        else
+        {
+            outline.effectColor = new Color(1f, 0f, 0.76f, 1f);
+        }
+        outline.effectDistance = new Vector2(2, -2);
+
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+
+        // ✅ SET WIDTH/HEIGHT = 52 như trong ảnh
+        textRect.sizeDelta = new Vector2(52f, 52f);
+
+        textRect.anchorMin = new Vector2(0.5f, 0.5f);
+        textRect.anchorMax = new Vector2(0.5f, 0.5f);
+        textRect.pivot = new Vector2(0.5f, 0.5f);
+
+        // ✅ POSITION: Góc dưới phải (tương tự ảnh: Pos X = 0.21, Pos Y = -0.24)
+        textRect.localPosition = new Vector3(0.21f, -0.24f, 0f);
+
+        // Lưu reference
+        Dot dotComponent = dot.GetComponent<Dot>();
+        dotComponent.multiplierText = text;
+
+        Debug.Log($"[MULTIPLIER] Created x{multiplier} at ({dotComponent.column},{dotComponent.row})");
+        Debug.Log($"[MULTIPLIER] Scale: {textObj.transform.localScale}, Size: {textRect.sizeDelta}, Pos: {textRect.localPosition}");
+    }
 
     private bool MatchesOnBoard()
     {
@@ -1010,6 +1129,9 @@ public class Board : MonoBehaviour
 
         foreach (var kvp in sortedCounts)
         {
+            // ✅ LOG ĐỂ KIỂM TRA
+            Debug.Log($"[DESTROY] {kvp.Key}: {kvp.Value} (with multipliers)");
+
             GameObject entry = Instantiate(destructionEntryPrefab, destructionCountPanel.transform);
             entry.name = kvp.Key;
 
@@ -1474,83 +1596,83 @@ public class Board : MonoBehaviour
     // ==================== REWARD CALCULATION ====================
 
     private GameReward CalculateReward(bool playerWon, int turnCount)
-{
-    GameReward reward = new GameReward();
-    reward.petElement = enemyPetElement;
-    reward.petId = enemyPetId;
-
-    // ✅ NẾU THUA
-    if (!playerWon)
     {
-        reward.requestAttack = 50;
-        reward.win = false;
+        GameReward reward = new GameReward();
+        reward.petElement = enemyPetElement;
+        reward.petId = enemyPetId;
 
-        // THUA: nhận 1-2 đá level 1 (an ủi)
-        int loseStones = UnityEngine.Random.Range(1, 3);
-        reward.stones.Add(new RewardStone
+        // ✅ NẾU THUA
+        if (!playerWon)
         {
-            level = 1,
-            element = enemyPetElement,
-            quantity = loseStones
-        });
+            reward.requestAttack = 50;
+            reward.win = false;
 
-        Debug.Log($"[REWARD] Defeat: {loseStones}x Lv1 {enemyPetElement} stones");
-        return reward;
-    }
+            // THUA: nhận 1-2 đá level 1 (an ủi)
+            int loseStones = UnityEngine.Random.Range(1, 3);
+            reward.stones.Add(new RewardStone
+            {
+                level = 1,
+                element = enemyPetElement,
+                quantity = loseStones
+            });
 
-    // ✅ NẾU THẮNG
-    int requestAttack = PlayerPrefs.GetInt("requestAttack", 100);
-    reward.requestAttack = requestAttack;
-    reward.win = true;
+            Debug.Log($"[REWARD] Defeat: {loseStones}x Lv1 {enemyPetElement} stones");
+            return reward;
+        }
 
-    // ✅ THẮNG: 5% CƠ HỘI NHẬN GOLD BONUS (CHỈ VỚI PET LEVEL >= 60)
-    int enemyPetLevel = PlayerPrefs.GetInt("EnemyPetLevel", 0); // ✅ THÊM: Lấy level enemy
-    
-    if (enemyPetLevel >= 60)
-    {
-        float luckyChance = UnityEngine.Random.Range(0f, 100f);
-        if (luckyChance < 5f) // 5% chance
+        // ✅ NẾU THẮNG
+        int requestAttack = PlayerPrefs.GetInt("requestAttack", 100);
+        reward.requestAttack = requestAttack;
+        reward.win = true;
+
+        // ✅ THẮNG: 5% CƠ HỘI NHẬN GOLD BONUS (CHỈ VỚI PET LEVEL >= 60)
+        int enemyPetLevel = PlayerPrefs.GetInt("EnemyPetLevel", 0); // ✅ THÊM: Lấy level enemy
+
+        if (enemyPetLevel >= 60)
         {
-            reward.bonusGold = UnityEngine.Random.Range(1000, 5001); // 1000-5000
-            Debug.Log($"[REWARD] 🍀 LUCKY! (Pet Lv{enemyPetLevel}): Bonus Gold {reward.bonusGold}");
+            float luckyChance = UnityEngine.Random.Range(0f, 100f);
+            if (luckyChance < 5f) // 5% chance
+            {
+                reward.bonusGold = UnityEngine.Random.Range(1000, 5001); // 1000-5000
+                Debug.Log($"[REWARD] 🍀 LUCKY! (Pet Lv{enemyPetLevel}): Bonus Gold {reward.bonusGold}");
+            }
+            else
+            {
+                Debug.Log($"[REWARD] No luck this time (Pet Lv{enemyPetLevel}, roll: {luckyChance:F1})");
+            }
         }
         else
         {
-            Debug.Log($"[REWARD] No luck this time (Pet Lv{enemyPetLevel}, roll: {luckyChance:F1})");
+            Debug.Log($"[REWARD] Pet level {enemyPetLevel} < 60, no gold bonus chance");
         }
-    }
-    else
-    {
-        Debug.Log($"[REWARD] Pet level {enemyPetLevel} < 60, no gold bonus chance");
-    }
 
-    // ✅ BOSS BATTLE: Luôn cho đá theo hệ boss
-    if (isBossBattle)
-    {
-        reward.receivedPet = false;
+        // ✅ BOSS BATTLE: Luôn cho đá theo hệ boss
+        if (isBossBattle)
+        {
+            reward.receivedPet = false;
 
-        int totalStones = CalculateTotalStones(turnCount);
-        DistributeStones(reward, totalStones, turnCount);
+            int totalStones = CalculateTotalStones(turnCount);
+            DistributeStones(reward, totalStones, turnCount);
 
-        Debug.Log($"[REWARD] Boss Victory: {totalStones} {enemyPetElement} stones");
+            Debug.Log($"[REWARD] Boss Victory: {totalStones} {enemyPetElement} stones");
+            return reward;
+        }
+
+        // ✅ PVP: Logic như cũ (có thể nhận pet)
+        if (currentCount == requestPass)
+        {
+            reward.receivedPet = true;
+            Debug.Log($"[REWARD] PvP Victory: Received Enemy Pet! ({enemyPetElement}, ID: {enemyPetId})");
+            return reward;
+        }
+
+        // PvP chưa đủ count → cho đá theo hệ enemy pet
+        int pvpStones = CalculateTotalStones(turnCount);
+        DistributeStones(reward, pvpStones, turnCount);
+
+        Debug.Log($"[REWARD] PvP Victory: {pvpStones} {enemyPetElement} stones");
         return reward;
     }
-
-    // ✅ PVP: Logic như cũ (có thể nhận pet)
-    if (currentCount == requestPass)
-    {
-        reward.receivedPet = true;
-        Debug.Log($"[REWARD] PvP Victory: Received Enemy Pet! ({enemyPetElement}, ID: {enemyPetId})");
-        return reward;
-    }
-
-    // PvP chưa đủ count → cho đá theo hệ enemy pet
-    int pvpStones = CalculateTotalStones(turnCount);
-    DistributeStones(reward, pvpStones, turnCount);
-
-    Debug.Log($"[REWARD] PvP Victory: {pvpStones} {enemyPetElement} stones");
-    return reward;
-}
 
     private int CalculateTotalStones(int turnCount)
     {
@@ -1670,79 +1792,79 @@ public class Board : MonoBehaviour
     // ==================== DISPLAY REWARDS ====================
 
     private IEnumerator DisplayRewards(GameReward reward)
-{
-    if (listReward == null)
     {
-        Debug.LogWarning("[REWARD] ListReward not assigned!");
-        yield break;
+        if (listReward == null)
+        {
+            Debug.LogWarning("[REWARD] ListReward not assigned!");
+            yield break;
+        }
+
+        // Xóa các reward cũ
+        foreach (Transform child in listReward.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        yield return new WaitForSecondsRealtime(0.2f);
+
+        // ✅ HIỂN THỊ BONUS GOLD (NẾU CÓ)
+        if (reward.bonusGold > 0)
+        {
+            yield return StartCoroutine(DisplayBonusGold(reward.bonusGold));
+        }
+
+        // THÊM: Kiểm tra nếu có pet reward
+        if (reward.receivedPet)
+        {
+            yield return StartCoroutine(DisplayPetReward(reward));
+        }
+        // THÊM: Kiểm tra nếu có stone rewards
+        else if (reward.stones != null && reward.stones.Count > 0)
+        {
+            yield return StartCoroutine(DisplayStoneRewards(reward));
+        }
+        else
+        {
+            Debug.Log("[REWARD] No rewards to display");
+        }
     }
 
-    // Xóa các reward cũ
-    foreach (Transform child in listReward.transform)
+    /// <summary>
+    /// ✅ HIỂN THỊ BONUS GOLD (5% LUCKY)
+    /// </summary>
+    private IEnumerator DisplayBonusGold(int bonusGold)
     {
-        Destroy(child.gameObject);
+        if (itemRewardCT == null)
+        {
+            Debug.LogWarning("[REWARD] ItemRewardCT prefab not assigned!");
+            yield break;
+        }
+
+        // ✅ TẠO ICON GOLD
+        GameObject goldReward = Instantiate(itemRewardGold, listReward.transform);
+        goldReward.SetActive(true);
+        Text goldCount = goldReward.transform.Find("txtCount")?.GetComponent<Text>();
+        if (goldCount != null)
+        {
+            goldCount.text = $"+{bonusGold}";
+        }
+
+        goldReward.transform.localScale = Vector3.zero;
+
+        // ✅ ANIMATION ĐẶC BIỆT (LUCKY!)
+        LeanTween.scale(goldReward, Vector3.one * 1.2f, 0.6f)
+            .setEaseOutElastic()
+            .setIgnoreTimeScale(true)
+            .setDelay(0.1f);
+
+        // ✅ PULSE EFFECT (nhấp nháy)
+        LeanTween.scale(goldReward, Vector3.one, 0.3f)
+            .setDelay(0.7f)
+            .setLoopPingPong(2)
+            .setIgnoreTimeScale(true);
+
+        yield return new WaitForSecondsRealtime(1.5f);
     }
-
-    yield return new WaitForSecondsRealtime(0.2f);
-
-    // ✅ HIỂN THỊ BONUS GOLD (NẾU CÓ)
-    if (reward.bonusGold > 0)
-    {
-        yield return StartCoroutine(DisplayBonusGold(reward.bonusGold));
-    }
-
-    // THÊM: Kiểm tra nếu có pet reward
-    if (reward.receivedPet)
-    {
-        yield return StartCoroutine(DisplayPetReward(reward));
-    }
-    // THÊM: Kiểm tra nếu có stone rewards
-    else if (reward.stones != null && reward.stones.Count > 0)
-    {
-        yield return StartCoroutine(DisplayStoneRewards(reward));
-    }
-    else
-    {
-        Debug.Log("[REWARD] No rewards to display");
-    }
-}
-
-/// <summary>
-/// ✅ HIỂN THỊ BONUS GOLD (5% LUCKY)
-/// </summary>
-private IEnumerator DisplayBonusGold(int bonusGold)
-{
-    if (itemRewardCT == null)
-    {
-        Debug.LogWarning("[REWARD] ItemRewardCT prefab not assigned!");
-        yield break;
-    }
-
-    // ✅ TẠO ICON GOLD
-    GameObject goldReward = Instantiate(itemRewardGold, listReward.transform);
-    goldReward.SetActive(true);
-    Text goldCount = goldReward.transform.Find("txtCount")?.GetComponent<Text>();
-    if (goldCount != null)
-    {
-        goldCount.text = $"+{bonusGold}";
-    }
-
-    goldReward.transform.localScale = Vector3.zero;
-
-    // ✅ ANIMATION ĐẶC BIỆT (LUCKY!)
-    LeanTween.scale(goldReward, Vector3.one * 1.2f, 0.6f)
-        .setEaseOutElastic()
-        .setIgnoreTimeScale(true)
-        .setDelay(0.1f);
-
-    // ✅ PULSE EFFECT (nhấp nháy)
-    LeanTween.scale(goldReward, Vector3.one, 0.3f)
-        .setDelay(0.7f)
-        .setLoopPingPong(2)
-        .setIgnoreTimeScale(true);
-
-    yield return new WaitForSecondsRealtime(1.5f);
-}
 
     private IEnumerator DisplayPetReward(GameReward reward)
     {
@@ -1826,7 +1948,7 @@ private IEnumerator DisplayBonusGold(int bonusGold)
             int requestAttack = PlayerPrefs.GetInt("requestAttack");
             counCtReward.text = requestAttack.ToString();
             int exp = requestAttack / 2;
-            counexpReward.text = "x"+exp.ToString();
+            counexpReward.text = "x" + exp.ToString();
         }
         LeanTween.scale(expReward, Vector3.one, 0.8f)
 .setEaseOutElastic()
@@ -1900,122 +2022,123 @@ private IEnumerator DisplayBonusGold(int bonusGold)
     // ==================== API CALLS ====================
 
     private IEnumerator SaveRewardToServer(GameReward reward, bool playerWon)
-{
-    int userId = PlayerPrefs.GetInt("userId", 1);
-
-    // ✅ TÍNH EXP Ở UNITY
-    int expGain = 0;
-    
-    if (playerWon)
     {
-        expGain = reward.requestAttack / 2;
-    }
-    else
-    {
-        expGain = 10;
-    }
+        int userId = PlayerPrefs.GetInt("userId", 1);
 
-    Debug.Log($"[REWARD] Calculated EXP gain: {expGain}");
+        // ✅ TÍNH EXP Ở UNITY
+        int expGain = 0;
 
-    // ✅ GỬI BONUS GOLD (NẾU CÓ)
-    if (reward.bonusGold > 0)
-    {
-        var goldData = new AddGoldDto { goldAmount = reward.bonusGold };
-        
-        yield return APIManager.Instance.PostRequest<string>(
-            APIConfig.ADD_GOLD(userId),
-            goldData,
-            onSuccess: (resp) =>
-            {
-                Debug.Log($"[API] ✓ Bonus Gold added: +{reward.bonusGold} 🍀");
-            },
-            onError: (err) =>
-            {
-                Debug.LogError("[API] Add bonus gold FAIL: " + err);
-            }
-        );
-    }
-
-    // ✅ GỬI REQUEST LÊN SERVER (GIỮ NGUYÊN)
-    if (reward.receivedPet)
-    {
-        // THẮNG + PET
-        var petData = new AddPetDto { 
-            petId = reward.petId, 
-            requestAttack = reward.requestAttack,
-            expGain = expGain
-        };
-
-        string apiUrl = APIConfig.ADD_PET_TO_USER(userId);
-        yield return APIManager.Instance.PostRequest<string>(
-            apiUrl,
-            petData,
-            onSuccess: (resp) =>
-            {
-                Debug.Log($"[API] ✓ Pet added: +{reward.requestAttack} CT, +{expGain} EXP");
-            },
-            onError: (err) =>
-            {
-                Debug.LogError("[API] Add pet FAIL: " + err);
-            }
-        );
-    }
-    else
-    {
-        // THẮNG/THUA + STONES
-        
-        // 1. Cộng CT
-        yield return APIManager.Instance.GetRequest<UserDTO>(
-            APIConfig.UP_CT(userId, reward.requestAttack),
-            null,
-            OnError
-        );
-
-        // 2. Cộng EXP
-        var expData = new AddExpDto { expGain = expGain };
-        
-        yield return APIManager.Instance.PostRequest<string>(
-            APIConfig.ADD_EXP(userId),
-            expData,
-            onSuccess: (resp) =>
-            {
-                Debug.Log($"[API] ✓ EXP added: +{expGain}");
-            },
-            onError: (err) =>
-            {
-                Debug.LogError("[API] Add EXP FAIL: " + err);
-            }
-        );
-
-        // 3. Thêm Stones
-        foreach (var stone in reward.stones)
+        if (playerWon)
         {
-            var stoneData = new AddStoneDto
-            {
-                element = stone.element,
-                level = stone.level,
-                quantity = stone.quantity
-            };
+            expGain = reward.requestAttack / 2;
+        }
+        else
+        {
+            expGain = 10;
+        }
 
-            string apiUrl = APIConfig.ADD_STONE_TO_USER(userId);
+        Debug.Log($"[REWARD] Calculated EXP gain: {expGain}");
+
+        // ✅ GỬI BONUS GOLD (NẾU CÓ)
+        if (reward.bonusGold > 0)
+        {
+            var goldData = new AddGoldDto { goldAmount = reward.bonusGold };
 
             yield return APIManager.Instance.PostRequest<string>(
-                apiUrl,
-                stoneData,
+                APIConfig.ADD_GOLD(userId),
+                goldData,
                 onSuccess: (resp) =>
                 {
-                    Debug.Log($"[API] ✓ Stone added: {stone.element} Lv{stone.level} x{stone.quantity}");
+                    Debug.Log($"[API] ✓ Bonus Gold added: +{reward.bonusGold} 🍀");
                 },
                 onError: (err) =>
                 {
-                    Debug.LogError("[API] Add stone FAIL: " + err);
+                    Debug.LogError("[API] Add bonus gold FAIL: " + err);
+                }
+            );
+        }
+
+        // ✅ GỬI REQUEST LÊN SERVER (GIỮ NGUYÊN)
+        if (reward.receivedPet)
+        {
+            // THẮNG + PET
+            var petData = new AddPetDto
+            {
+                petId = reward.petId,
+                requestAttack = reward.requestAttack,
+                expGain = expGain
+            };
+
+            string apiUrl = APIConfig.ADD_PET_TO_USER(userId);
+            yield return APIManager.Instance.PostRequest<string>(
+                apiUrl,
+                petData,
+                onSuccess: (resp) =>
+                {
+                    Debug.Log($"[API] ✓ Pet added: +{reward.requestAttack} CT, +{expGain} EXP");
+                },
+                onError: (err) =>
+                {
+                    Debug.LogError("[API] Add pet FAIL: " + err);
+                }
+            );
+        }
+        else
+        {
+            // THẮNG/THUA + STONES
+
+            // 1. Cộng CT
+            yield return APIManager.Instance.GetRequest<UserDTO>(
+                APIConfig.UP_CT(userId, reward.requestAttack),
+                null,
+                OnError
+            );
+
+            // 2. Cộng EXP
+            var expData = new AddExpDto { expGain = expGain };
+
+            yield return APIManager.Instance.PostRequest<string>(
+                APIConfig.ADD_EXP(userId),
+                expData,
+                onSuccess: (resp) =>
+                {
+                    Debug.Log($"[API] ✓ EXP added: +{expGain}");
+                },
+                onError: (err) =>
+                {
+                    Debug.LogError("[API] Add EXP FAIL: " + err);
                 }
             );
 
-            yield return new WaitForSecondsRealtime(0.1f);
+            // 3. Thêm Stones
+            foreach (var stone in reward.stones)
+            {
+                var stoneData = new AddStoneDto
+                {
+                    element = stone.element,
+                    level = stone.level,
+                    quantity = stone.quantity
+                };
+
+                string apiUrl = APIConfig.ADD_STONE_TO_USER(userId);
+
+                yield return APIManager.Instance.PostRequest<string>(
+                    apiUrl,
+                    stoneData,
+                    onSuccess: (resp) =>
+                    {
+                        Debug.Log($"[API] ✓ Stone added: {stone.element} Lv{stone.level} x{stone.quantity}");
+                    },
+                    onError: (err) =>
+                    {
+                        Debug.LogError("[API] Add stone FAIL: " + err);
+                    }
+                );
+
+                yield return new WaitForSecondsRealtime(0.1f);
+            }
         }
     }
-}
 
 
     void OnError(string error)
