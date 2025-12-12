@@ -813,7 +813,6 @@ public class Board : MonoBehaviour
     yield return new WaitForSeconds(0.25f);
 
     StartCoroutine(DecreaseRowCo());
-    yield return new WaitForSeconds(1f);
 }
 
     public void DestroyMatches()
@@ -892,30 +891,41 @@ public class Board : MonoBehaviour
             }
             nullCount = 0;
         }
-        yield return new WaitForSeconds(.4f);
+        yield return new WaitForSeconds(.1f);
         StartCoroutine(FillBoardCo());
     }
 
     private void RefillBoard()
+{
+    for (int i = 0; i < width; i++)
     {
-        for (int i = 0; i < width; i++)
+        for (int j = 0; j < height; j++)
         {
-            for (int j = 0; j < height; j++)
+            if (allDots[i, j] == null)
             {
-                if (allDots[i, j] == null)
+                Vector2 tempPosition = new Vector2(i, j + offSet);
+                
+                // ✅ THÊM: Tránh spawn viên tạo match ngay
+                int dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                int maxAttempts = 100;
+                int attempts = 0;
+                
+                while (MatchesAt(i, j, dots[dotToUse]) && attempts < maxAttempts)
                 {
-                    Vector2 tempPosition = new Vector2(i, j + offSet);
-                    int dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                    GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
-                    allDots[i, j] = piece;
-                    piece.GetComponent<Dot>().row = j;
-                    piece.GetComponent<Dot>().column = i;
-                    piece.transform.parent = this.transform;
-                    piece.name = "(" + i + "," + j + ")";
+                    dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                    attempts++;
                 }
+                
+                GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
+                allDots[i, j] = piece;
+                piece.GetComponent<Dot>().row = j;
+                piece.GetComponent<Dot>().column = i;
+                piece.transform.parent = this.transform;
+                piece.name = "(" + i + "," + j + ")";
             }
         }
     }
+}
 
     private bool MatchesOnBoard()
     {
@@ -938,16 +948,15 @@ public class Board : MonoBehaviour
     private IEnumerator FillBoardCo()
     {
         RefillBoard();
-        yield return new WaitForSeconds(.8f);
+        yield return new WaitForSeconds(.1f);
 
         while (MatchesOnBoard())
         {
-            yield return new WaitForSeconds(.3f);
+            yield return new WaitForSeconds(.1f);
             DestroyMatches();
-            yield return new WaitForSeconds(.6f);
         }
 
-        yield return new WaitForSeconds(.4f);
+        yield return new WaitForSeconds(.3f);
 
         if (stableBoardCheckCoroutine != null)
         {
@@ -1078,7 +1087,7 @@ public class Board : MonoBehaviour
 
             // 🎬 BẮT ĐẦU ANIMATION HEAL
             StartCoroutine(active.SetAnimationForItem("xanh Dot"));
-            yield return new WaitForSeconds(0.3f); // Đợi animation khởi động
+            yield return new WaitForSeconds(0.15f); // Đợi animation khởi động
 
             // Hiển thị từng hiệu ứng heal
             foreach (string healType in healOrder)
@@ -1087,12 +1096,12 @@ public class Board : MonoBehaviour
                 {
                     yield return StartCoroutine(active.OutputsParam(healType));
                     active.UpdateSlider();
-                    yield return new WaitForSeconds(0.2f); // Spacing giữa các heal
+                    yield return new WaitForSeconds(0.1f); // Spacing giữa các heal
                 }
             }
 
             // 🎬 KẾT THÚC ANIMATION HEAL
-            yield return new WaitForSeconds(0.4f);
+            yield return new WaitForSeconds(0.2f);
             if (active.IsPlayerTurn && active.playerPetAnimator != null)
                 active.playerPetAnimator.SetInteger("key", 0);
             else if (active.IsNPCTurn && active.bossPetAnimator != null)
@@ -1121,7 +1130,7 @@ public class Board : MonoBehaviour
             yield return StartCoroutine(active.OutputsParam("vang Dot"));
 
             // 🎬 RESET ANIMATION
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.2f);
             if (active.IsPlayerTurn && active.playerPetAnimator != null)
                 active.playerPetAnimator.SetInteger("key", 0);
             else if (active.IsNPCTurn && active.bossPetAnimator != null)

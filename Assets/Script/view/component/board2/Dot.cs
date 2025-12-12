@@ -89,46 +89,38 @@ public class Dot : MonoBehaviourPun
     }
 
     void UpdatePositionAndMatches()
-{
-    targetX = column;
-    targetY = row;
+    {
+        targetX = column;
+        targetY = row;
 
-    // ✅ THÊM: Tính toán tốc độ mượt hơn
-    float smoothSpeed = 20f; // Tốc độ di chuyển (càng cao càng nhanh)
-    float snapDistance = 0.01f; // Khoảng cách để snap về vị trí chính xác
+        // Di chuyển ngang
+        if (Mathf.Abs(targetX - transform.position.x) > .1f)
+        {
+            tempPosition = new Vector2(targetX, transform.position.y);
+            transform.position = Vector2.Lerp(transform.position, tempPosition, 0.2f);
+            UpdateBoardReference();
+            FindAllMatches();
+        }
+        else
+        {
+            tempPosition = new Vector2(targetX, transform.position.y);
+            transform.position = tempPosition;
+        }
 
-    // Di chuyển ngang
-    if (Mathf.Abs(targetX - transform.position.x) > snapDistance)
-    {
-        tempPosition = new Vector2(targetX, transform.position.y);
-        // ✅ SỬA: Dùng Time.deltaTime để mượt hơn
-        transform.position = Vector2.Lerp(transform.position, tempPosition, Time.deltaTime * smoothSpeed);
-        UpdateBoardReference();
-        FindAllMatches();
+        // Di chuyển dọc
+        if (Mathf.Abs(targetY - transform.position.y) > .1f)
+        {
+            tempPosition = new Vector2(transform.position.x, targetY);
+            transform.position = Vector2.Lerp(transform.position, tempPosition, 0.2f);
+            UpdateBoardReference();
+            FindAllMatches();
+        }
+        else
+        {
+            tempPosition = new Vector2(transform.position.x, targetY);
+            transform.position = tempPosition;
+        }
     }
-    else
-    {
-        // Snap về vị trí chính xác
-        tempPosition = new Vector2(targetX, transform.position.y);
-        transform.position = tempPosition;
-    }
-
-    // Di chuyển dọc
-    if (Mathf.Abs(targetY - transform.position.y) > snapDistance)
-    {
-        tempPosition = new Vector2(transform.position.x, targetY);
-        // ✅ SỬA: Dùng Time.deltaTime để mượt hơn
-        transform.position = Vector2.Lerp(transform.position, tempPosition, Time.deltaTime * smoothSpeed);
-        UpdateBoardReference();
-        FindAllMatches();
-    }
-    else
-    {
-        // Snap về vị trí chính xác
-        tempPosition = new Vector2(transform.position.x, targetY);
-        transform.position = tempPosition;
-    }
-}
 
     void UpdateBoardReference()
     {
@@ -167,7 +159,6 @@ public class Dot : MonoBehaviourPun
         if (CanInteract())
         {
             firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
             AudioManager.Instance.PlaySwordClickSound();
         }
     }
