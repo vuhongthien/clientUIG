@@ -173,72 +173,291 @@ public class CardUI : MonoBehaviour
     // ✅ ENTER BUTTON BLINK EFFECT
     private Coroutine blinkCoroutine;
 
-    void Start()
-{
-    board = FindFirstObjectByType<Board>();
-    active = FindFirstObjectByType<Active>();
-    btn = GetComponent<Button>();
-    if (cardData.cardId == 0)
-    {
-        gameObject.SetActive(false);
-        Debug.Log("[CardUI] Card hidden - no cardData assigned");
-        return; // ✅ DỪNG KHỞI TẠO
-    }
+    [Header("Legend Card Background Effects")]
+    [Tooltip("Ảnh nền cần áp dụng hiệu ứng")]
+    public Image backgroundImage;
 
-    // ✅ Setup imgtCard
-    if (imgtCard == null)
+    [Tooltip("Màu flash effect (default: trắng)")]
+    public Color flashColor = Color.white;
+
+    [Tooltip("Số lần flash")]
+    public int flashCount = 3;
+
+    [Tooltip("Thời gian mỗi lần flash (giây)")]
+    public float flashDuration = 0.15f;
+
+    [Tooltip("Cường độ rung (shake magnitude)")]
+    public float shakeMagnitude = 10f;
+
+    [Tooltip("Thời gian rung (giây)")]
+    public float shakeDuration = 0.5f;
+    private Color originalBackgroundColor;
+private bool isBackgroundEffectActive = false;
+[Header("Legend Card Background Effects")]
+
+[Tooltip("Chế độ tương phản: true = trắng, false = đen")]
+public bool useWhiteContrast = true;
+
+[Tooltip("Màu tương phản trắng")]
+public Color whiteContrastColor = new Color(0.95f, 0.95f, 0.95f, 1f);
+
+[Tooltip("Màu tương phản đen")]
+public Color blackContrastColor = new Color(0.1f, 0.1f, 0.1f, 1f);
+
+[Tooltip("Thời gian chuyển sang màu tương phản (giây)")]
+public float contrastTransitionTime = 0.05f;
+
+[Tooltip("Chế độ flash: true = có transition mượt, false = flash gấp")]
+public bool smoothTransition = false; // ✅ THÊM OPTION
+
+
+    void Start()
     {
-        Transform imgTransform = transform.Find("imgtCard");
-        if (imgTransform != null)
+        board = FindFirstObjectByType<Board>();
+        active = FindFirstObjectByType<Active>();
+        btn = GetComponent<Button>();
+        if (cardData.cardId == 0)
         {
-            imgtCard = imgTransform.GetComponent<Image>();
+            gameObject.SetActive(false);
+            Debug.Log("[CardUI] Card hidden - no cardData assigned");
+            return; // ✅ DỪNG KHỞI TẠO
         }
-        
-        if (imgtCard != null)
+if (backgroundImage != null)
+    {
+        originalBackgroundColor = backgroundImage.color;
+        Debug.Log($"[CardUI] Saved original background color: {originalBackgroundColor}");
+    }
+        // ✅ Setup imgtCard
+        if (imgtCard == null)
         {
-            originalSprite = imgtCard.sprite;
-            Debug.Log($"[CardUI] Found imgtCard, sprite: {(originalSprite != null ? originalSprite.name : "NULL")}");
+            Transform imgTransform = transform.Find("imgtCard");
+            if (imgTransform != null)
+            {
+                imgtCard = imgTransform.GetComponent<Image>();
+            }
+
+            if (imgtCard != null)
+            {
+                originalSprite = imgtCard.sprite;
+                Debug.Log($"[CardUI] Found imgtCard, sprite: {(originalSprite != null ? originalSprite.name : "NULL")}");
+            }
+            else
+            {
+                Debug.LogError("[CardUI] imgtCard not found!");
+            }
         }
         else
         {
-            Debug.LogError("[CardUI] imgtCard not found!");
+            originalSprite = imgtCard.sprite;
+            Debug.Log($"[CardUI] imgtCard assigned, sprite: {(originalSprite != null ? originalSprite.name : "NULL")}");
+        }
+
+        // ✅ Tạo Animation Canvas cho tất cả cards
+        CreateAnimationCanvas();
+
+        // ✅ CHỈ TẠO DOT SKILL UI NẾU CẦN (sẽ check sau khi có cardData)
+        // CreateDotSkillPanel(); // ❌ XÓA DÒNG NÀY
+        // CreateTimeSliderWithZones(); // ❌ XÓA DÒNG NÀY
+        // CreateTimingText(); // ❌ XÓA DÒNG NÀY
+
+        // ✅ Setup button listeners (nếu có)
+        SetupControlButtonListeners();
+
+        // ✅ Load sprites cho Dot Skill
+        LoadDotSkillSprites();
+
+        // ✅ Ẩn UI ban đầu
+        HideDotSkillUI();
+
+        // ✅ Setup card click
+        if (btn != null)
+        {
+            btn.onClick.AddListener(OnCardClick);
+        }
+
+        // ✅ Subscribe events
+        if (active != null)
+        {
+            active.OnTurnStart += OnTurnStart;
         }
     }
-    else
+/// <summary>
+/// ✅ PHASE 1: NHẤP NHÁY LIÊN TỤC - LINH HOẠT
+/// </summary>
+private IEnumerator ChangeBackgroundToContrast()
+{
+    if (backgroundImage == null)
     {
-        originalSprite = imgtCard.sprite;
-        Debug.Log($"[CardUI] imgtCard assigned, sprite: {(originalSprite != null ? originalSprite.name : "NULL")}");
+        Debug.LogWarning("[CardUI] Background image not assigned!");
+        yield break;
     }
 
-    // ✅ Tạo Animation Canvas cho tất cả cards
-    CreateAnimationCanvas();
+    isBackgroundEffectActive = true;
 
-    // ✅ CHỈ TẠO DOT SKILL UI NẾU CẦN (sẽ check sau khi có cardData)
-    // CreateDotSkillPanel(); // ❌ XÓA DÒNG NÀY
-    // CreateTimeSliderWithZones(); // ❌ XÓA DÒNG NÀY
-    // CreateTimingText(); // ❌ XÓA DÒNG NÀY
+    Debug.Log($"[CardUI] Starting continuous flash (Smooth: {smoothTransition})");
 
-    // ✅ Setup button listeners (nếu có)
-    SetupControlButtonListeners();
+    bool isWhite = true;
 
-    // ✅ Load sprites cho Dot Skill
-    LoadDotSkillSprites();
-
-    // ✅ Ẩn UI ban đầu
-    HideDotSkillUI();
-
-    // ✅ Setup card click
-    if (btn != null)
+    while (!hasFinishedDotSkill)
     {
-        btn.onClick.AddListener(OnCardClick);
-    }
+        Color targetColor = isWhite ? whiteContrastColor : blackContrastColor;
+        
+        if (smoothTransition)
+        {
+            // ✅ CHUYỂN MƯỢT
+            float elapsed = 0f;
+            Color startColor = backgroundImage.color;
 
-    // ✅ Subscribe events
-    if (active != null)
-    {
-        active.OnTurnStart += OnTurnStart;
+            while (elapsed < contrastTransitionTime && !hasFinishedDotSkill)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / contrastTransitionTime;
+                
+                backgroundImage.color = Color.Lerp(startColor, targetColor, t);
+                
+                yield return null;
+            }
+        }
+        else
+        {
+            // ✅ FLASH GẤP
+            backgroundImage.color = targetColor;
+            yield return new WaitForSeconds(contrastTransitionTime);
+        }
+
+        // ✅ THOÁT SỚM NẾU ĐÃ NHẤN ENTER
+        if (hasFinishedDotSkill)
+        {
+            break;
+        }
+
+        // Đổi màu
+        isWhite = !isWhite;
     }
+    
+    Debug.Log("[CardUI] Continuous flash stopped");
 }
+
+/// <summary>
+/// ✅ PHASE 2: RUNG LẮC SAU KHI NHẤN ENTER (FLASH VẪN CHẠY SONG SONG)
+/// </summary>
+private IEnumerator ShakeBackgroundAfterEnter()
+{
+    if (backgroundImage == null || !isBackgroundEffectActive)
+    {
+        yield break;
+    }
+
+    Debug.Log($"[CardUI] Starting earthquake shake for {shakeDuration}s");
+
+    Vector3 originalPosition = backgroundImage.rectTransform.anchoredPosition;
+    Vector3 originalScale = backgroundImage.rectTransform.localScale;
+
+    float elapsed = 0f;
+
+    while (elapsed < shakeDuration)
+    {
+        // ✅ RUNG MẠNH, GIẢM DẦN
+        float progress = elapsed / shakeDuration;
+        float currentMagnitude = shakeMagnitude * (1f - progress);
+
+        float x = Random.Range(-currentMagnitude, currentMagnitude);
+        float y = Random.Range(-currentMagnitude, currentMagnitude);
+
+        backgroundImage.rectTransform.anchoredPosition = originalPosition + new Vector3(x, y, 0);
+
+        // ✅ ZOOM NHẸ
+        float zoom = 1f + Mathf.Sin(elapsed * 30f) * 0.01f * (1f - progress);
+        backgroundImage.rectTransform.localScale = originalScale * zoom;
+
+        elapsed += Time.deltaTime;
+        yield return null;
+    }
+
+    // ✅ RESET VỊ TRÍ VÀ SCALE
+    backgroundImage.rectTransform.anchoredPosition = originalPosition;
+    backgroundImage.rectTransform.localScale = originalScale;
+
+    Debug.Log("[CardUI] Shake completed");
+}
+
+/// <summary>
+/// ✅ PHASE 3: TRỞ VỀ MÀU GỐC SAU KHI HOÀN TẤT
+/// </summary>
+private IEnumerator RestoreBackgroundColor()
+{
+    if (backgroundImage == null || !isBackgroundEffectActive)
+    {
+        yield break;
+    }
+
+    Debug.Log("[CardUI] Restoring background to original color");
+
+    float elapsed = 0f;
+    float duration = 0.5f;
+    Color startColor = backgroundImage.color;
+
+    while (elapsed < duration)
+    {
+        elapsed += Time.deltaTime;
+        float t = elapsed / duration;
+        
+        backgroundImage.color = Color.Lerp(startColor, originalBackgroundColor, t);
+        
+        yield return null;
+    }
+
+    backgroundImage.color = originalBackgroundColor;
+    isBackgroundEffectActive = false;
+
+    Debug.Log("[CardUI] Background restored to normal");
+}
+
+/// <summary>
+/// ✅ HIỆU ỨNG SẤM CHỚP ĐỘNG ĐẤT CHO LEGEND CARD
+/// </summary>
+private IEnumerator PlayLegendBackgroundEffect()
+{
+    if (backgroundImage == null)
+    {
+        Debug.LogWarning("[CardUI] Background image not assigned!");
+        yield break;
+    }
+
+    Color originalColor = backgroundImage.color;
+    Vector3 originalPosition = backgroundImage.rectTransform.anchoredPosition;
+
+    // ===== 1) FLASH EFFECT (SẤM CHỚP) =====
+    for (int i = 0; i < flashCount; i++)
+    {
+        // Flash sáng
+        backgroundImage.color = flashColor;
+        yield return new WaitForSeconds(flashDuration);
+
+        // Trở về màu gốc
+        backgroundImage.color = originalColor;
+        yield return new WaitForSeconds(flashDuration * 0.5f);
+    }
+
+    // ===== 2) SHAKE EFFECT (ĐỘNG ĐẤT) =====
+    float elapsed = 0f;
+
+    while (elapsed < shakeDuration)
+    {
+        float x = Random.Range(-shakeMagnitude, shakeMagnitude);
+        float y = Random.Range(-shakeMagnitude, shakeMagnitude);
+
+        backgroundImage.rectTransform.anchoredPosition = originalPosition + new Vector3(x, y, 0);
+
+        elapsed += Time.deltaTime;
+        yield return null;
+    }
+
+    // ===== 3) RESET VỀ VỊ TRÍ GỐC =====
+    backgroundImage.rectTransform.anchoredPosition = originalPosition;
+    backgroundImage.color = originalColor;
+}
+
     /// <summary>
     /// ✅ SETUP LISTENER CHO CÁC BUTTON ĐÃ GÁN SẴN TRONG INSPECTOR
     /// </summary>
@@ -317,42 +536,42 @@ public class CardUI : MonoBehaviour
     /// ✅ HIỆN TẤT CẢ UI DOT SKILL
     /// </summary>
     private void ShowDotSkillUI()
-{
-    // ✅ VALIDATE TRƯỚC KHI HIỆN
-    if (!ValidateDotSkillComponents())
     {
-        Debug.LogError("[CardUI] Cannot show Dot Skill UI - missing components!");
-        return;
+        // ✅ VALIDATE TRƯỚC KHI HIỆN
+        if (!ValidateDotSkillComponents())
+        {
+            Debug.LogError("[CardUI] Cannot show Dot Skill UI - missing components!");
+            return;
+        }
+
+        if (dotSkillPanel != null)
+        {
+            dotSkillPanel.gameObject.SetActive(true);
+        }
+
+        if (timeSlider != null)
+        {
+            timeSlider.gameObject.SetActive(true);
+        }
+
+        if (btnUp != null)
+        {
+            btnUp.gameObject.SetActive(true);
+            btnUp.interactable = true;
+
+            btnDown.gameObject.SetActive(true);
+            btnDown.interactable = true;
+
+            btnLeft.gameObject.SetActive(true);
+            btnLeft.interactable = true;
+
+            btnRight.gameObject.SetActive(true);
+            btnRight.interactable = true;
+
+            btnEnter.gameObject.SetActive(true);
+            btnEnter.interactable = false;
+        }
     }
-
-    if (dotSkillPanel != null)
-    {
-        dotSkillPanel.gameObject.SetActive(true);
-    }
-
-    if (timeSlider != null)
-    {
-        timeSlider.gameObject.SetActive(true);
-    }
-
-    if (btnUp != null)
-    {
-        btnUp.gameObject.SetActive(true);
-        btnUp.interactable = true;
-
-        btnDown.gameObject.SetActive(true);
-        btnDown.interactable = true;
-
-        btnLeft.gameObject.SetActive(true);
-        btnLeft.interactable = true;
-
-        btnRight.gameObject.SetActive(true);
-        btnRight.interactable = true;
-
-        btnEnter.gameObject.SetActive(true);
-        btnEnter.interactable = false;
-    }
-}
 
     void OnDestroy()
     {
@@ -514,63 +733,63 @@ public class CardUI : MonoBehaviour
     }
 
     private void CreateTimingText()
-{
-    if (timingText != null) return;
-
-    Canvas canvas = animationCanvas;
-    if (canvas == null)
     {
-        canvas = FindFirstObjectByType<Canvas>();
-    }
+        if (timingText != null) return;
 
-    if (canvas == null) return;
-
-    Transform textTransform = canvas.transform.Find("TimingText");
-
-    if (textTransform == null)
-    {
-        GameObject textObj = new GameObject("TimingText");
-        textObj.transform.SetParent(canvas.transform);
-
-        RectTransform textRT = textObj.AddComponent<RectTransform>();
-        textRT.anchorMin = new Vector2(0.5f, 0.5f);
-        textRT.anchorMax = new Vector2(0.5f, 0.5f);
-        textRT.pivot = new Vector2(0.5f, 0.5f);
-        textRT.anchoredPosition = new Vector2(0, 150f);
-        textRT.sizeDelta = new Vector2(300f, 80f);
-
-        timingText = textObj.AddComponent<Text>();
-        
-        // ✅ THÊM DÒNG NÀY - QUAN TRỌNG!
-        timingText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        
-        timingText.fontSize = 60;
-        timingText.alignment = TextAnchor.MiddleCenter;
-        timingText.fontStyle = FontStyle.Bold;
-        timingText.text = "";
-        timingText.color = Color.white;
-        timingText.raycastTarget = false;
-
-        Outline outline = textObj.AddComponent<Outline>();
-        outline.effectColor = Color.black;
-        outline.effectDistance = new Vector2(3, -3);
-
-        textObj.SetActive(false);
-
-        Debug.Log("[CardUI] Created TimingText with Arial font");
-    }
-    else
-    {
-        timingText = textTransform.GetComponent<Text>();
-        
-        // ✅ ĐẢM BẢO TEXT CÓ SẴN CŨNG CÓ FONT
-        if (timingText != null && timingText.font == null)
+        Canvas canvas = animationCanvas;
+        if (canvas == null)
         {
+            canvas = FindFirstObjectByType<Canvas>();
+        }
+
+        if (canvas == null) return;
+
+        Transform textTransform = canvas.transform.Find("TimingText");
+
+        if (textTransform == null)
+        {
+            GameObject textObj = new GameObject("TimingText");
+            textObj.transform.SetParent(canvas.transform);
+
+            RectTransform textRT = textObj.AddComponent<RectTransform>();
+            textRT.anchorMin = new Vector2(0.5f, 0.5f);
+            textRT.anchorMax = new Vector2(0.5f, 0.5f);
+            textRT.pivot = new Vector2(0.5f, 0.5f);
+            textRT.anchoredPosition = new Vector2(0, 150f);
+            textRT.sizeDelta = new Vector2(300f, 80f);
+
+            timingText = textObj.AddComponent<Text>();
+
+            // ✅ THÊM DÒNG NÀY - QUAN TRỌNG!
             timingText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            Debug.Log("[CardUI] Added font to existing TimingText");
+
+            timingText.fontSize = 60;
+            timingText.alignment = TextAnchor.MiddleCenter;
+            timingText.fontStyle = FontStyle.Bold;
+            timingText.text = "";
+            timingText.color = Color.white;
+            timingText.raycastTarget = false;
+
+            Outline outline = textObj.AddComponent<Outline>();
+            outline.effectColor = Color.black;
+            outline.effectDistance = new Vector2(3, -3);
+
+            textObj.SetActive(false);
+
+            Debug.Log("[CardUI] Created TimingText with Arial font");
+        }
+        else
+        {
+            timingText = textTransform.GetComponent<Text>();
+
+            // ✅ ĐẢM BẢO TEXT CÓ SẴN CŨNG CÓ FONT
+            if (timingText != null && timingText.font == null)
+            {
+                timingText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+                Debug.Log("[CardUI] Added font to existing TimingText");
+            }
         }
     }
-}
 
 
     private void LoadDotSkillSprites()
@@ -682,7 +901,7 @@ public class CardUI : MonoBehaviour
 
     private void OnTurnStart(int entityIndex)
     {
-        if (active == null || cardData == null || cardData.cardId==0) return;
+        if (active == null || cardData == null || cardData.cardId == 0) return;
 
         int currentTurn = active.TurnNumber;
         Debug.Log($"[CardUI] Turn {cardData.cardId} started");
@@ -721,75 +940,75 @@ public class CardUI : MonoBehaviour
     }
 
     public void SetCardData(CardData data)
-{
-    cardData = data;
-
-    // ✅ NẾU LÀ LEGEND CARD, TẠO DOT SKILL UI
-    if (RequiresDotSkillUI())
     {
-        Debug.Log($"[CardUI] Setting up Dot Skill UI for {cardData.name}");
-        
-        CreateDotSkillPanel();
-        CreateTimeSliderWithZones();
-        CreateTimingText();
-        
-        // ✅ Validate sau khi tạo
-        if (!ValidateDotSkillComponents())
+        cardData = data;
+
+        // ✅ NẾU LÀ LEGEND CARD, TẠO DOT SKILL UI
+        if (RequiresDotSkillUI())
         {
-            Debug.LogError($"[CardUI] Failed to create Dot Skill UI for {cardData.name}!");
+            Debug.Log($"[CardUI] Setting up Dot Skill UI for {cardData.name}");
+
+            CreateDotSkillPanel();
+            CreateTimeSliderWithZones();
+            CreateTimingText();
+
+            // ✅ Validate sau khi tạo
+            if (!ValidateDotSkillComponents())
+            {
+                Debug.LogError($"[CardUI] Failed to create Dot Skill UI for {cardData.name}!");
+            }
+        }
+        else
+        {
+            Debug.Log($"[CardUI] Normal card {cardData.name} - no Dot Skill UI needed");
         }
     }
-    else
-    {
-        Debug.Log($"[CardUI] Normal card {cardData.name} - no Dot Skill UI needed");
-    }
-}
 
     public CardData GetCardData()
     {
         return cardData;
     }
 
-/// <summary>
-/// ✅ Kiểm tra xem Dot Skill UI có cần thiết không (chỉ cho legend cards)
-/// </summary>
-private bool RequiresDotSkillUI()
-{
-    if (cardData == null || cardData.cardId == 0) return false;
-    string elementType = cardData.elementTypeCard.ToUpper();
-    return elementType == "ATTACK_LEGEND" || elementType == "ATTACK_LEGEND_";
-}
-
-/// <summary>
-/// ✅ Validate Dot Skill components - CHỈ CHO LEGEND CARDS
-/// </summary>
-private bool ValidateDotSkillComponents()
-{
-    if (!RequiresDotSkillUI())
+    /// <summary>
+    /// ✅ Kiểm tra xem Dot Skill UI có cần thiết không (chỉ cho legend cards)
+    /// </summary>
+    private bool RequiresDotSkillUI()
     {
-        // Card thường không cần Dot Skill components
+        if (cardData == null || cardData.cardId == 0) return false;
+        string elementType = cardData.elementTypeCard.ToUpper();
+        return elementType == "ATTACK_LEGEND" || elementType == "ATTACK_LEGEND_";
+    }
+
+    /// <summary>
+    /// ✅ Validate Dot Skill components - CHỈ CHO LEGEND CARDS
+    /// </summary>
+    private bool ValidateDotSkillComponents()
+    {
+        if (!RequiresDotSkillUI())
+        {
+            // Card thường không cần Dot Skill components
+            return true;
+        }
+
+        // ✅ LEGEND CARD: Kiểm tra các components cần thiết
+        List<string> missingComponents = new List<string>();
+
+        if (dotSkillPanel == null) missingComponents.Add("dotSkillPanel");
+        if (timeSlider == null) missingComponents.Add("timeSlider");
+        if (btnUp == null) missingComponents.Add("btnUp");
+        if (btnDown == null) missingComponents.Add("btnDown");
+        if (btnLeft == null) missingComponents.Add("btnLeft");
+        if (btnRight == null) missingComponents.Add("btnRight");
+        if (btnEnter == null) missingComponents.Add("btnEnter");
+
+        if (missingComponents.Count > 0)
+        {
+            Debug.LogError($"[CardUI] Legend card {cardData.name} missing components: {string.Join(", ", missingComponents)}");
+            return false;
+        }
+
         return true;
     }
-
-    // ✅ LEGEND CARD: Kiểm tra các components cần thiết
-    List<string> missingComponents = new List<string>();
-
-    if (dotSkillPanel == null) missingComponents.Add("dotSkillPanel");
-    if (timeSlider == null) missingComponents.Add("timeSlider");
-    if (btnUp == null) missingComponents.Add("btnUp");
-    if (btnDown == null) missingComponents.Add("btnDown");
-    if (btnLeft == null) missingComponents.Add("btnLeft");
-    if (btnRight == null) missingComponents.Add("btnRight");
-    if (btnEnter == null) missingComponents.Add("btnEnter");
-
-    if (missingComponents.Count > 0)
-    {
-        Debug.LogError($"[CardUI] Legend card {cardData.name} missing components: {string.Join(", ", missingComponents)}");
-        return false;
-    }
-
-    return true;
-}
     private bool IsBuffCard()
     {
         if (cardData == null) return false;
@@ -812,167 +1031,164 @@ private bool ValidateDotSkillComponents()
     }
 
     public void OnCardClick()
-{
-    if (board == null ||
-        board.currentState != GameState.move ||
-        !board.IsPlayerAllowedToMove() ||
-        active == null ||
-        board.hasDestroyedThisTurn)
     {
-        return;
-    }
-
-    if (!CanUseCard())
-    {
-        return;
-    }
-
-    if (cardData == null)
-    {
-        Debug.LogWarning("[CardUI] Cannot use card - cardData is null");
-        return;
-    }
-
-    // ✅ VALIDATE DOT SKILL COMPONENTS CHO LEGEND CARDS
-    if (IsDotSkillCard())
-    {
-        if (!ValidateDotSkillComponents())
+        if (board == null ||
+            board.currentState != GameState.move ||
+            !board.IsPlayerAllowedToMove() ||
+            active == null ||
+            board.hasDestroyedThisTurn)
         {
-            Debug.LogError($"[CardUI] Cannot use {cardData.name} - missing Dot Skill components!");
             return;
         }
-    }
 
-    // ✅ Update flags
-    if (IsAttackCard())
-    {
-        hasUsedThisTurn = true;
-        lastTurnUsed = active != null ? active.TurnNumber : -1;
-    }
-    else if (IsBuffCard())
-    {
-        hasUsedThisMatch = true;
-        hasUsedBuffThisTurn = true;
-        lastBuffUsedTurn = active != null ? active.TurnNumber : -1;
-    }
+        if (!CanUseCard())
+        {
+            return;
+        }
 
-    StartCoroutine(PlayCardAnimationSequence());
-}
+        if (cardData == null)
+        {
+            Debug.LogWarning("[CardUI] Cannot use card - cardData is null");
+            return;
+        }
 
-   private IEnumerator PlayCardAnimationSequence()
-{
-    if (active == null || board == null) yield break;
-
-    board.HideAllItems();
-    active.PauseTurn();
-    yield return new WaitForSeconds(0.3f);
-
-    if (centerCardImage != null)
-{
-    // ✅ COPY SPRITE TỪ CARD ĐANG CLICK
-    if (imgtCard != null && imgtCard.sprite != null)
-    {
-        centerCardImage.sprite = imgtCard.sprite;
-        Debug.Log($"[CardUI] Display card sprite: {imgtCard.sprite.name}");
-    }
-    else
-    {
-        Debug.LogError("[CardUI] imgtCard or its sprite is null!");
-        yield break;
-    }
-        centerCardImage.color = Color.white;
-
-        GameObject centerCardObj = centerCardImage.gameObject;
-        centerCardObj.SetActive(true);
-
-        CanvasGroup cg = centerCardObj.GetComponent<CanvasGroup>();
-        if (cg == null)
-            cg = centerCardObj.AddComponent<CanvasGroup>();
-
-        cg.alpha = 1f;
-
-        centerCardObj.transform.localScale = Vector3.zero;
-        LeanTween.scale(centerCardObj, Vector3.one * centerCardScale, 0.4f)
-            .setEaseOutBack();
-
-        yield return new WaitForSeconds(0.5f);
-
+        // ✅ VALIDATE DOT SKILL COMPONENTS CHO LEGEND CARDS
         if (IsDotSkillCard())
         {
-            yield return StartCoroutine(HandleDotSkillSequence());
-        }
-        else
-        {
-            yield return StartCoroutine(HandleCardEffectByElementType());
-        }
-
-        // ✅ CHỈ FADE OUT THẺ CHO CARD THƯỜNG (không phải Dot Skill)
-        if (!IsDotSkillCard())
-        {
-            yield return new WaitForSeconds(animationDuration);
-
-            float t = 0f;
-            float fadeDuration = 0.3f;
-
-            while (t < fadeDuration)
+            if (!ValidateDotSkillComponents())
             {
-                t += Time.deltaTime;
-                cg.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
-                yield return null;
+                Debug.LogError($"[CardUI] Cannot use {cardData.name} - missing Dot Skill components!");
+                return;
+            }
+        }
+
+        // ✅ Update flags
+        if (IsAttackCard())
+        {
+            hasUsedThisTurn = true;
+            lastTurnUsed = active != null ? active.TurnNumber : -1;
+        }
+        else if (IsBuffCard())
+        {
+            hasUsedThisMatch = true;
+            hasUsedBuffThisTurn = true;
+            lastBuffUsedTurn = active != null ? active.TurnNumber : -1;
+        }
+
+        StartCoroutine(PlayCardAnimationSequence());
+    }
+
+    private IEnumerator PlayCardAnimationSequence()
+    {
+        if (active == null || board == null) yield break;
+
+        board.HideAllItems();
+        active.PauseTurn();
+        yield return new WaitForSeconds(0.3f);
+
+        if (centerCardImage != null)
+        {
+            // ✅ COPY SPRITE TỪ CARD ĐANG CLICK
+            if (imgtCard != null && imgtCard.sprite != null)
+            {
+                centerCardImage.sprite = imgtCard.sprite;
+                Debug.Log($"[CardUI] Display card sprite: {imgtCard.sprite.name}");
+            }
+            else
+            {
+                Debug.LogError("[CardUI] imgtCard or its sprite is null!");
+                yield break;
+            }
+            centerCardImage.color = Color.white;
+
+            GameObject centerCardObj = centerCardImage.gameObject;
+            centerCardObj.SetActive(true);
+
+            CanvasGroup cg = centerCardObj.GetComponent<CanvasGroup>();
+            if (cg == null)
+                cg = centerCardObj.AddComponent<CanvasGroup>();
+
+            cg.alpha = 1f;
+
+            centerCardObj.transform.localScale = Vector3.zero;
+            LeanTween.scale(centerCardObj, Vector3.one * centerCardScale, 0.4f)
+                .setEaseOutBack();
+
+            yield return new WaitForSeconds(0.5f);
+
+            if (IsDotSkillCard())
+            {
+                yield return StartCoroutine(HandleDotSkillSequence());
+            }
+            else
+            {
+                yield return StartCoroutine(HandleCardEffectByElementType());
             }
 
-            cg.alpha = 0f;
-            centerCardObj.SetActive(false);
-            centerCardObj.transform.localScale = Vector3.one;
+            // ✅ CHỈ FADE OUT THẺ CHO CARD THƯỜNG (không phải Dot Skill)
+            if (!IsDotSkillCard())
+            {
+                yield return new WaitForSeconds(animationDuration);
+
+                float t = 0f;
+                float fadeDuration = 0.3f;
+
+                while (t < fadeDuration)
+                {
+                    t += Time.deltaTime;
+                    cg.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+                    yield return null;
+                }
+
+                cg.alpha = 0f;
+                centerCardObj.SetActive(false);
+                centerCardObj.transform.localScale = Vector3.one;
+            }
+        }
+
+        // ✅ CHECK NẾU LÀ ATTACK_LEGEND_ → KHÔNG XỬ LÝ TIẾP (HandleUI() đang chạy)
+        if (cardData != null && cardData.elementTypeCard.ToUpper() == "ATTACK_LEGEND_")
+        {
+            Debug.Log("[CardUI] ATTACK_LEGEND_ completed - letting HandleUI() take over");
+
+            ConvertToPlaceholder();
+
+            yield break;
+        }
+
+        // ===== XỬ LÝ BÌNH THƯỜNG CHO CÁC CARD KHÁC =====
+
+        bool playerDead = active.MauPlayer <= 0;
+        bool npcDead = active.MauNPC <= 0;
+
+        if (playerDead || npcDead)
+        {
+            yield return StartCoroutine(board.ShowGameResultIntegrated(npcDead));
+            yield break;
+        }
+
+        board.ShowItems();
+        yield return new WaitForSeconds(0.1f);
+
+        if (IsBuffCard())
+        {
+            yield return StartCoroutine(CallAPIUseCard());
+        }
+
+        ConvertToPlaceholder();
+        yield return new WaitForSeconds(0.5f);
+
+        if (IsBuffCard())
+        {
+            active.ResumeTurn();
+        }
+        else if (IsAttackCard())
+        {
+            if (active.IsPlayerTurn)
+                active.EndCurrentTurn();
         }
     }
 
-    // ✅ CHECK NẾU LÀ ATTACK_LEGEND_ → KHÔNG XỬ LÝ TIẾP (HandleUI() đang chạy)
-    if (cardData != null && cardData.elementTypeCard.ToUpper() == "ATTACK_LEGEND_")
-    {
-        Debug.Log("[CardUI] ATTACK_LEGEND_ completed - letting HandleUI() take over");
-        
-        ConvertToPlaceholder();
-
-        yield break;
-    }
-
-    // ===== XỬ LÝ BÌNH THƯỜNG CHO CÁC CARD KHÁC =====
-    
-    bool playerDead = active.MauPlayer <= 0;
-    bool npcDead = active.MauNPC <= 0;
-
-    if (playerDead || npcDead)
-    {
-        yield return StartCoroutine(board.ShowGameResultIntegrated(npcDead));
-        yield break;
-    }
-
-    board.ShowItems();
-    yield return new WaitForSeconds(0.1f);
-
-    if (IsBuffCard())
-    {
-        yield return StartCoroutine(CallAPIUseCard());
-    }
-
-    ConvertToPlaceholder();
-    yield return new WaitForSeconds(0.5f);
-
-    if (IsBuffCard())
-    {
-        active.ResumeTurn();
-    }
-    else if (IsAttackCard())
-    {
-        if (active.IsPlayerTurn)
-            active.EndCurrentTurn();
-    }
-}
-
-    /// <summary>
-    /// ✅ XỬ LÝ DOT SKILL - GÕ 7 PHÍM + NHẤN ENTER ĐỂ HOÀN TẤT
-    /// </summary>
 private IEnumerator HandleDotSkillSequence()
 {
     if (cardData == null || active == null)
@@ -981,12 +1197,14 @@ private IEnumerator HandleDotSkillSequence()
         yield break;
     }
 
-    // ✅ VALIDATE COMPONENTS
     if (!ValidateDotSkillComponents())
     {
         Debug.LogError("[CardUI] Cannot start Dot Skill - missing components!");
         yield break;
     }
+
+    // ✅ BẮT ĐẦU NHẤP NHÁY LIÊN TỤC (CHẠY SONG SONG)
+    Coroutine flashCoroutine = StartCoroutine(ContinuousFlashBackground());
 
     string elementType = cardData.elementTypeCard.ToUpper();
     int totalDamage = cardData.value;
@@ -1038,6 +1256,9 @@ private IEnumerator HandleDotSkillSequence()
 
         yield return null;
     }
+
+    // ✅ SAU KHI NHẤN ENTER → THÊM RUNG LẮC (FLASH VẪN CHẠY)
+    yield return StartCoroutine(ShakeBackgroundAfterEnter());
 
     // ✅ HIỂN THỊ TIMING TEXT
     if (!hasFinishedDotSkill)
@@ -1102,6 +1323,14 @@ private IEnumerator HandleDotSkillSequence()
         }
 
         ClearDotArrows();
+        
+        // ✅ DỪNG FLASH & TRỞ VỀ MÀU GỐC
+        if (flashCoroutine != null)
+        {
+            StopCoroutine(flashCoroutine);
+        }
+        yield return StartCoroutine(RestoreBackgroundColor());
+        
         yield break;
     }
 
@@ -1137,6 +1366,64 @@ private IEnumerator HandleDotSkillSequence()
     }
 
     ClearDotArrows();
+    
+    // ✅ DỪNG FLASH & TRỞ VỀ MÀU GỐC
+    if (flashCoroutine != null)
+    {
+        StopCoroutine(flashCoroutine);
+    }
+    yield return StartCoroutine(RestoreBackgroundColor());
+}
+
+
+/// <summary>
+/// ✅ NHẤP NHÁY LIÊN TỤC TRONG SUỐT QUÁ TRÌNH SỬ DỤNG THẺ
+/// </summary>
+private IEnumerator ContinuousFlashBackground()
+{
+    if (backgroundImage == null)
+    {
+        Debug.LogWarning("[CardUI] Background image not assigned!");
+        yield break;
+    }
+
+    isBackgroundEffectActive = true;
+
+    Debug.Log($"[CardUI] Starting continuous flash (Smooth: {smoothTransition})");
+
+    bool isWhite = true;
+
+    // ✅ CHẠY VÔ HẠN CHO ĐẾN KHI BỊ STOP
+    while (true)
+    {
+        Color targetColor = isWhite ? whiteContrastColor : blackContrastColor;
+        
+        if (smoothTransition)
+        {
+            // ✅ CHUYỂN MƯỢT
+            float elapsed = 0f;
+            Color startColor = backgroundImage.color;
+
+            while (elapsed < contrastTransitionTime)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / contrastTransitionTime;
+                
+                backgroundImage.color = Color.Lerp(startColor, targetColor, t);
+                
+                yield return null;
+            }
+        }
+        else
+        {
+            // ✅ FLASH GẤP
+            backgroundImage.color = targetColor;
+            yield return new WaitForSeconds(contrastTransitionTime);
+        }
+
+        // Đổi màu
+        isWhite = !isWhite;
+    }
 }
     /// <summary>
     /// ✅ XỬ LÝ KHI NHẤN ENTER - HOÀN TẤT MINI-GAME
@@ -1262,27 +1549,27 @@ private IEnumerator HandleDotSkillSequence()
     }
 
     void Update()
-{
-    UpdateCardVisual();
-
-    // ✅ CHỈ XỬ LÝ INPUT NẾU LÀ DOT SKILL CARD
-    if (isDotSkillActive && IsDotSkillCard() && currentArrows.Count > 0)
     {
-        if (Input.anyKeyDown)
+        UpdateCardVisual();
+
+        // ✅ CHỈ XỬ LÝ INPUT NẾU LÀ DOT SKILL CARD
+        if (isDotSkillActive && IsDotSkillCard() && currentArrows.Count > 0)
         {
-            string keyPressed = GetDirectionFromInput();
-            if (keyPressed != null)
+            if (Input.anyKeyDown)
             {
-                CheckDotArrow(keyPressed);
+                string keyPressed = GetDirectionFromInput();
+                if (keyPressed != null)
+                {
+                    CheckDotArrow(keyPressed);
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+            {
+                OnEnterButtonPress();
             }
         }
-
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
-        {
-            OnEnterButtonPress();
-        }
     }
-}
 
     private void CheckDotArrow(string dir)
     {
@@ -1642,5 +1929,5 @@ private IEnumerator HandleDotSkillSequence()
         lastBuffUsedTurn = -1;
     }
 
-    
+
 }

@@ -130,7 +130,19 @@ public class Board : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
     private List<GameObject> cardsInHand = new List<GameObject>();
     public CardData cardData;
-    public int HOTTURN = 15;
+    private int HOTTURN = 15;
+    [Header("Energy System")]
+    [Tooltip("Panel thông báo hết năng lượng")]
+    public GameObject energyWarningPanel;
+
+    [Tooltip("Text hiển thị thông báo")]
+    public Text energyWarningText;
+
+    [Tooltip("Button OK để đóng thông báo")]
+    public Button energyWarningButton;
+
+    private bool hasShownEnergyWarning = false;
+    private int lastCheckedEnergy = -1;
 
     public static Board Instance { get; private set; }
 
@@ -701,34 +713,32 @@ public class Board : MonoBehaviour
 
     private bool MatchesAt(int column, int row, GameObject piece)
     {
-        if (column > 1 && row > 1)
+        // ✅ CHECK NGANG: Cần có ít nhất 2 viên bên trái
+        if (column > 1)
         {
-            if (allDots[column - 1, row].tag == piece.tag && allDots[column - 2, row].tag == piece.tag)
+            if (allDots[column - 1, row] != null && allDots[column - 2, row] != null)
             {
-                return true;
-            }
-            if (allDots[column, row - 1].tag == piece.tag && allDots[column, row - 2].tag == piece.tag)
-            {
-                return true;
-            }
-        }
-        else if (column <= 1 || row <= 1)
-        {
-            if (row > 1)
-            {
-                if (allDots[column, row - 1].tag == piece.tag && allDots[column, row - 2].tag == piece.tag)
-                {
-                    return true;
-                }
-            }
-            if (column > 1)
-            {
-                if (allDots[column - 1, row].tag == piece.tag && allDots[column - 2, row].tag == piece.tag)
+                if (allDots[column - 1, row].tag == piece.tag &&
+                    allDots[column - 2, row].tag == piece.tag)
                 {
                     return true;
                 }
             }
         }
+
+        // ✅ CHECK DỌC: Cần có ít nhất 2 viên bên dưới
+        if (row > 1)
+        {
+            if (allDots[column, row - 1] != null && allDots[column, row - 2] != null)
+            {
+                if (allDots[column, row - 1].tag == piece.tag &&
+                    allDots[column, row - 2].tag == piece.tag)
+                {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -901,7 +911,7 @@ public class Board : MonoBehaviour
     private void RefillBoard()
     {
         bool isAfterTurn20 = (active != null && active.TurnNumber >= HOTTURN);
-        Debug.Log("isAfterTurn20: " + isAfterTurn20);
+
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
@@ -914,14 +924,19 @@ public class Board : MonoBehaviour
                     int maxAttempts = 100;
                     int attempts = 0;
 
-                    while (MatchesAt(i, j, dots[dotToUse]) && attempts < maxAttempts)
+                    // ✅ GÁN VIÊN TẠM VÀO MẢNG ĐỂ MatchesAt() HOẠT ĐỘNG
+                    GameObject tempPiece = dots[dotToUse];
+
+                    while (MatchesAt(i, j, tempPiece) && attempts < maxAttempts)
                     {
                         dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                        tempPiece = dots[dotToUse];
                         attempts++;
                     }
 
+                    // ✅ BÂY GIỜ MỚI SPAWN
                     GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
-                    allDots[i, j] = piece;
+                    allDots[i, j] = piece; // ✅ GÁN NGAY
 
                     Dot dotComponent = piece.GetComponent<Dot>();
                     dotComponent.row = j;
@@ -929,22 +944,21 @@ public class Board : MonoBehaviour
                     piece.transform.parent = this.transform;
                     piece.name = "(" + i + "," + j + ")";
 
-                    // ✅ LOGIC MỚI: Sau turn 20 có thể spawn viên x2 hoặc x3
+                    // Logic multiplier (giữ nguyên)
                     if (isAfterTurn20)
                     {
                         float roll = UnityEngine.Random.Range(0f, 100f);
 
-                        if (roll < 5f) // 5% chance x3
+                        if (roll < 10f)
                         {
                             dotComponent.multiplier = 3;
                             CreateMultiplierText(piece, 3);
                         }
-                        else if (roll < 15f) // 15%
+                        else if (roll < 25f)
                         {
                             dotComponent.multiplier = 2;
                             CreateMultiplierText(piece, 2);
                         }
-                        // 55% còn lại = x1 (không có text)
                     }
                 }
             }
@@ -1328,6 +1342,11 @@ public class Board : MonoBehaviour
                 null,
                 OnError
             );
+            if (!CheckEnergyAndShowWarning())
+            {
+                // Hết năng lượng → Dừng xử lý, đợi về QuangTruong
+                yield break;
+            }
         }
 
         int nextIndex = active.IsPlayerTurn ? 1 : 0;
@@ -2804,11 +2823,160 @@ public class Board : MonoBehaviour
 
         if (currentState != GameState.move)
         {
-            Debug.LogError("[Board] Pipeline timeout! Forcing to move state.");
+            Debug.LogWarning("[Board] Pipeline timeout! Forcing to move state.");
             currentState = GameState.move;
         }
 
         Debug.Log("[Board] Destroy pipeline completed");
+    }
+    /// <summary>
+    /// ✅ KIỂM TRA NĂNG LƯỢNG SAU MỖI TURN
+    /// </summary>
+    private bool CheckEnergyAndShowWarning()
+    {
+        if (ManagerMatch.Instance == null) return true;
+
+        int currentEnergy = int.Parse(ManagerMatch.Instance.txtNLUser.text);
+
+        Debug.Log($"[ENERGY] Current energy: {currentEnergy}");
+
+        // ✅ NẾU HẾT NĂNG LƯỢNG (0)
+        if (currentEnergy <= 0)
+        {
+            Debug.LogWarning("[ENERGY] Out of energy! Returning to QuangTruong...");
+            StartCoroutine(ShowEnergyWarningAndReturn("Bạn đã hết năng lượng!", true));
+            return false;
+        }
+
+        // ✅ NẾU NĂNG LƯỢNG DƯỚI 5 VÀ CHƯA CẢNH BÁO
+        if (currentEnergy < 5 && currentEnergy != lastCheckedEnergy)
+        {
+            lastCheckedEnergy = currentEnergy;
+            Debug.LogWarning($"[ENERGY] Low energy warning: {currentEnergy}/5");
+            StartCoroutine(ShowEnergyWarningAndReturn($"Năng lượng sắp hết!\nCòn lại: {currentEnergy}", false));
+            return true; // Vẫn cho phép chơi tiếp
+        }
+
+        return true;
+    }
+    /// <summary>
+    /// ✅ HIỂN THỊ CẢNH BÁO NĂNG LƯỢNG
+    /// </summary>
+    private IEnumerator ShowEnergyWarningAndReturn(string message, bool forceReturn)
+    {
+        if (energyWarningPanel == null)
+        {
+            Debug.LogWarning("[ENERGY] Warning panel not assigned!");
+
+            if (forceReturn)
+            {
+                // Nếu hết năng lượng mà không có panel → về luôn
+                yield return new WaitForSeconds(1f);
+                ReturnToQuangTruong();
+            }
+            yield break;
+        }
+
+        // ✅ PAUSE GAME
+        if (active != null)
+        {
+            active.PauseTurn();
+        }
+        currentState = GameState.wait;
+
+        // ✅ HIỂN THỊ PANEL
+        energyWarningPanel.SetActive(true);
+
+        // ✅ SET TEXT
+        if (energyWarningText != null)
+        {
+            energyWarningText.text = message;
+        }
+
+        // ✅ SETUP BUTTON
+        if (energyWarningButton != null)
+        {
+            energyWarningButton.onClick.RemoveAllListeners();
+
+            if (forceReturn)
+            {
+                // HẾT NĂNG LƯỢNG: Button về QuangTruong
+                energyWarningButton.onClick.AddListener(() =>
+                {
+                    energyWarningPanel.SetActive(false);
+                    ReturnToQuangTruong();
+                });
+
+                Text btnText = energyWarningButton.GetComponentInChildren<Text>();
+                if (btnText != null)
+                {
+                    btnText.text = "Về Quảng Trường";
+                }
+            }
+            else
+            {
+                // CẢNH BÁO: Button đóng và tiếp tục
+                energyWarningButton.onClick.AddListener(() =>
+                {
+                    energyWarningPanel.SetActive(false);
+
+                    // Resume game
+                    if (active != null)
+                    {
+                        active.ResumeTurn();
+                    }
+                    currentState = GameState.move;
+                });
+
+                Text btnText = energyWarningButton.GetComponentInChildren<Text>();
+                if (btnText != null)
+                {
+                    btnText.text = "Tiếp tục";
+                }
+            }
+        }
+
+        // ✅ ANIMATION PANEL
+        CanvasGroup cg = energyWarningPanel.GetComponent<CanvasGroup>();
+        if (cg == null)
+        {
+            cg = energyWarningPanel.AddComponent<CanvasGroup>();
+        }
+
+        cg.alpha = 0f;
+        LeanTween.alphaCanvas(cg, 1f, 0.3f).setIgnoreTimeScale(true);
+
+        // ✅ NẾU HẾT NĂNG LƯỢNG: Tự động về sau 3 giây
+        if (forceReturn)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+
+            if (energyWarningPanel.activeSelf)
+            {
+                energyWarningPanel.SetActive(false);
+                ReturnToQuangTruong();
+            }
+        }
+    }
+    /// <summary>
+    /// ✅ TRỞ VỀ QUẢNG TRƯỜNG KHI HẾT NĂNG LƯỢNG
+    /// </summary>
+    private void ReturnToQuangTruong()
+    {
+        Time.timeScale = 1f;
+
+        Debug.Log("[ENERGY] Returning to QuangTruong - Out of energy");
+
+        // ✅ XÓA FLAGS NẾU CẦN
+        if (isBossBattle)
+        {
+            PlayerPrefs.SetString("IsBossBattle", "false");
+            PlayerPrefs.DeleteKey("BossElementType");
+        }
+
+        PlayerPrefs.Save();
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene("QuangTruong");
     }
 
 }

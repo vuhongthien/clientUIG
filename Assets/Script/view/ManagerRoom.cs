@@ -38,6 +38,17 @@ public class ManagerRoom : MonoBehaviour
     public GameObject panelSelectCards;    // Panel chọn thẻ
     public Button btnStartBattle;          // Nút bắt đầu chiến đấu
     public ToggleManager toggleManager;    // Manager chọn thẻ
+    [Header("Energy Warning")]
+    [Tooltip("Panel thông báo hết năng lượng")]
+    public GameObject energyWarningPanel;
+
+    [Tooltip("Text hiển thị thông báo")]
+    public Text energyWarningText;
+
+    [Tooltip("Button OK để đóng thông báo")]
+    public Button energyWarningOkButton;
+
+    private int currentUserEnergy = 0;
 
     private RoomDTO roomData;
     public List<CardData> selectedCards = new List<CardData>();
@@ -557,75 +568,75 @@ public class ManagerRoom : MonoBehaviour
     }
 
     /// <summary>
-/// ✅ SETUP TOGGLE VỚI CARD DATA
-/// </summary>
-void SetupToggle(GameObject toggleObj, CardData card)
-{
-    // Gắn CardData
-    CardToggleData toggleData = toggleObj.GetComponent<CardToggleData>();
-    if (toggleData == null)
+    /// ✅ SETUP TOGGLE VỚI CARD DATA
+    /// </summary>
+    void SetupToggle(GameObject toggleObj, CardData card)
     {
-        toggleData = toggleObj.AddComponent<CardToggleData>();
-    }
-    toggleData.cardData = card;
+        // Gắn CardData
+        CardToggleData toggleData = toggleObj.GetComponent<CardToggleData>();
+        if (toggleData == null)
+        {
+            toggleData = toggleObj.AddComponent<CardToggleData>();
+        }
+        toggleData.cardData = card;
 
-    // Load sprite
-    Image[] images = toggleObj.GetComponentsInChildren<Image>();
-    if (images.Length > 1)
-    {
-        Sprite cardSprite = Resources.Load<Sprite>($"Image/Card/card{card.cardId}");
-        if (cardSprite != null)
+        // Load sprite
+        Image[] images = toggleObj.GetComponentsInChildren<Image>();
+        if (images.Length > 1)
         {
-            images[1].sprite = cardSprite;
-            Debug.Log($"[ManagerRoom] ✓ Loaded sprite for card {images[1].gameObject.name} (ID: {card.cardId})");
-        }
-        else
-        {
-            Debug.LogWarning($"[ManagerRoom] Sprite not found: Image/Card/card{card.cardId}");
-        }
-    }
-
-    // ✅ KIỂM TRA NẾU LÀ THẺ ATTACK
-    bool isAttackCard = card.elementTypeCard != null && card.elementTypeCard.ToUpper() == "ATTACK";
-
-    // Set text (nếu có)
-    Text[] texts = toggleObj.GetComponentsInChildren<Text>();
-    foreach (Text txt in texts)
-    {
-        if (txt.name.Contains("Name"))
-        {
-            txt.text = card.name;
-        }
-        else if (txt.name.Contains("Level"))
-        {
-            txt.text = $"Lv.{card.level}";
-        }
-        else if (txt.name.Contains("Count"))
-        {
-            // ✅ NẾU LÀ THẺ ATTACK THÌ KHÔNG HIỂN THỊ COUNT
-            if (isAttackCard)
+            Sprite cardSprite = Resources.Load<Sprite>($"Image/Card/card{card.cardId}");
+            if (cardSprite != null)
             {
-                txt.text = "";
+                images[1].sprite = cardSprite;
+                Debug.Log($"[ManagerRoom] ✓ Loaded sprite for card {images[1].gameObject.name} (ID: {card.cardId})");
             }
             else
             {
-                txt.text = $"x{card.count}";
+                Debug.LogWarning($"[ManagerRoom] Sprite not found: Image/Card/card{card.cardId}");
             }
         }
-        else if (txt.name.Contains("Value"))
+
+        // ✅ KIỂM TRA NẾU LÀ THẺ ATTACK
+        bool isAttackCard = card.elementTypeCard != null && card.elementTypeCard.ToUpper() == "ATTACK";
+
+        // Set text (nếu có)
+        Text[] texts = toggleObj.GetComponentsInChildren<Text>();
+        foreach (Text txt in texts)
         {
-            txt.text = card.value.ToString();
+            if (txt.name.Contains("Name"))
+            {
+                txt.text = card.name;
+            }
+            else if (txt.name.Contains("Level"))
+            {
+                txt.text = $"Lv.{card.level}";
+            }
+            else if (txt.name.Contains("Count"))
+            {
+                // ✅ NẾU LÀ THẺ ATTACK THÌ KHÔNG HIỂN THỊ COUNT
+                if (isAttackCard)
+                {
+                    txt.text = "";
+                }
+                else
+                {
+                    txt.text = $"x{card.count}";
+                }
+            }
+            else if (txt.name.Contains("Value"))
+            {
+                txt.text = card.value.ToString();
+            }
+        }
+
+        // Setup Toggle component
+        Toggle toggle = toggleObj.GetComponent<Toggle>();
+        if (toggle != null)
+        {
+            toggle.isOn = false;
+            toggle.group = toggleManager.listToggle.GetComponent<ToggleGroup>();
         }
     }
-
-    // Setup Toggle component
-    Toggle toggle = toggleObj.GetComponent<Toggle>();
-    if (toggle != null)
-    {
-        toggle.isOn = false;
-        toggle.group = toggleManager.listToggle.GetComponent<ToggleGroup>();
-    }
-}
 
     /// <summary>
     /// ✅ TẠO TOGGLE ĐỘNG (nếu không có prefab)
@@ -690,6 +701,10 @@ void SetupToggle(GameObject toggleObj, CardData card)
     void OnUserReceived(UserDTO user)
     {
         Debug.Log("[ManagerRoom] User data received");
+
+        // ✅ LƯU NĂNG LƯỢNG HIỆN TẠI
+        currentUserEnergy = user.energy;
+        Debug.Log($"[ManagerRoom] Current energy: {currentUserEnergy}");
 
         if (txtNl != null)
         {
@@ -769,7 +784,97 @@ void SetupToggle(GameObject toggleObj, CardData card)
         Debug.Log("[ManagerRoom] ✓ Saved selected cards to PlayerPrefs");
 
     }
-    
+
+    /// <summary>
+    /// ✅ HIỂN THỊ THÔNG BÁO HẾT NĂNG LƯỢNG
+    /// </summary>
+    private void ShowEnergyWarning()
+    {
+        if (energyWarningPanel == null)
+        {
+            Debug.LogWarning("[ManagerRoom] Energy warning panel not assigned!");
+            return;
+        }
+
+        Debug.Log("[ManagerRoom] → Showing energy warning");
+
+        // ✅ HIỂN THỊ PANEL
+        energyWarningPanel.SetActive(true);
+
+        // ✅ SET TEXT
+        if (energyWarningText != null)
+        {
+            energyWarningText.text = "Bạn đã hết năng lượng!\nVui lòng nạp thêm năng lượng để tiếp tục.";
+        }
+
+        // ✅ SETUP BUTTON - CHỈ ĐÓNG POPUP
+        if (energyWarningOkButton != null)
+        {
+            energyWarningOkButton.onClick.RemoveAllListeners();
+            energyWarningOkButton.onClick.AddListener(() =>
+            {
+                HideEnergyWarning();
+                // ✅ KHÔNG GỌI ReturnToQuangTruong() NỮA
+            });
+
+            // Đổi text button
+            Text btnText = energyWarningOkButton.GetComponentInChildren<Text>();
+            if (btnText != null)
+            {
+                btnText.text = "Đóng";
+            }
+        }
+
+        // ✅ ANIMATION PANEL
+        energyWarningPanel.transform.localScale = Vector3.zero;
+        LeanTween.scale(energyWarningPanel, Vector3.one, 0.4f)
+            .setEaseOutBack()
+            .setIgnoreTimeScale(true);
+
+        // ✅ FADE IN
+        CanvasGroup cg = energyWarningPanel.GetComponent<CanvasGroup>();
+        if (cg == null)
+        {
+            cg = energyWarningPanel.AddComponent<CanvasGroup>();
+        }
+        cg.alpha = 0f;
+        LeanTween.alphaCanvas(cg, 1f, 0.3f).setIgnoreTimeScale(true);
+    }
+
+    /// <summary>
+    /// ✅ ẨN THÔNG BÁO NĂNG LƯỢNG
+    /// </summary>
+    private void HideEnergyWarning()
+    {
+        if (energyWarningPanel == null) return;
+
+        Debug.Log("[ManagerRoom] → Hiding energy warning");
+
+        LeanTween.scale(energyWarningPanel, Vector3.zero, 0.3f)
+            .setEaseInBack()
+            .setIgnoreTimeScale(true)
+            .setOnComplete(() => energyWarningPanel.SetActive(false));
+    }
+
+    /// <summary>
+    /// ✅ TRỞ VỀ QUẢNG TRƯỜNG KHI HẾT NĂNG LƯỢNG
+    /// </summary>
+    private void ReturnToQuangTruong()
+    {
+        Debug.Log("[ManagerRoom] Returning to QuangTruong - Out of energy");
+
+        // ✅ XÓA FLAGS
+        PlayerPrefs.DeleteKey("ReturnToRoom");
+        PlayerPrefs.DeleteKey("ReturnToChinhPhuc");
+        PlayerPrefs.DeleteKey("ReturnToPanelIndex");
+        PlayerPrefs.DeleteKey("SelectedCards");
+        PlayerPrefs.Save();
+
+        // ✅ LOAD SCENE
+        LeanTween.cancelAll();
+        LeanTween.reset();
+        UnityEngine.SceneManagement.SceneManager.LoadScene("QuangTruong");
+    }
 
     /// <summary>
     /// ✅ GỌI TRONG Start() HOẶC OpenRoomPanel()
@@ -884,6 +989,17 @@ void SetupToggle(GameObject toggleObj, CardData card)
 
     public void LoadScene(string nameScene)
     {
+        // ✅ KIỂM TRA NĂNG LƯỢNG TRƯỚC KHI VÀO MATCH
+        if (nameScene == "Match")
+        {
+            if (currentUserEnergy <= 1)
+            {
+                Debug.LogWarning($"[ManagerRoom] ⚠ Cannot start battle - Insufficient energy: {currentUserEnergy}");
+                ShowEnergyWarning();
+                return; // ✅ DỪNG LẠI, KHÔNG LOAD SCENE
+            }
+        }
+
         // ✅ GỌI OnStartBattle ĐỂ LƯU TRẠNG THÁI TRƯỚC KHI VÀO MATCH
         OnStartBattle();
 
@@ -898,6 +1014,7 @@ void SetupToggle(GameObject toggleObj, CardData card)
             PlayerPrefs.Save();
 
             Debug.Log($"[ManagerRoom] Saved state: PanelIndex={activePanelIndex}");
+            Debug.Log($"[ManagerRoom] ✓ Energy check passed: {currentUserEnergy} > 1");
         }
 
         LeanTween.cancelAll();
