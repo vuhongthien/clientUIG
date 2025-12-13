@@ -50,7 +50,7 @@ public class ManagerEquipment : MonoBehaviour
     [Header("User Info Tab - Basic Info")]
     public Image imgUserInfoAvatar;
     public Text txtUserInfoName;
-    public Text txtUserInfoLevel;
+    public Image imgUserInfoLevel;
     public Animator anmtUserInfoPet;
 
     [Header("User Info Tab - Current Pet Stats")]
@@ -628,6 +628,37 @@ public class ManagerEquipment : MonoBehaviour
         }
     }
 
+    void SetupImgLevel(int level, Image imgLvUser)
+    {
+        // Load sprite theo level
+        imgLvUser.sprite = Resources.Load<Sprite>("Image/hclv/level " + level);
+
+        // Get RectTransform
+        RectTransform rectTransform = imgLvUser.GetComponent<RectTransform>();
+
+        // Set size theo level
+        if (level >= 1 && level <= 9)
+        {
+            rectTransform.sizeDelta = new Vector2(40.61f, 35.88f);
+        }
+        else if (level >= 10 && level <= 14)
+        {
+            rectTransform.sizeDelta = new Vector2(43.79f, 37.9f);
+        }
+        else if (level >= 15 && level <= 47)
+        {
+            rectTransform.sizeDelta = new Vector2(61.35f, 63.51f);
+        }
+        else if (level >= 48 && level <= 49)
+        {
+            rectTransform.sizeDelta = new Vector2(70.85f, 73.35f);
+        }
+        else if (level >= 50 && level <= 60)
+        {
+            rectTransform.sizeDelta = new Vector2(114.54f, 95.67f);
+        }
+    }
+
     // ============================================================
     // ✅ DISPLAY USER INFO
     // ============================================================
@@ -639,10 +670,7 @@ public class ManagerEquipment : MonoBehaviour
             txtUserInfoName.text = userDetail.userName;
         }
 
-        if (txtUserInfoLevel != null)
-        {
-            txtUserInfoLevel.text = "Level " + userDetail.level;
-        }
+        SetupImgLevel(userDetail.level, imgUserInfoLevel);
 
         // Load hình ảnh avatar
         if (imgUserInfoAvatar != null)

@@ -19,7 +19,7 @@ public class ManagerTop : MonoBehaviour
     public Button btnCloseDetail;
     public Image imgUserDetail;
     public Text txtUserNameDetail;
-    public Text txtUserLevelDetail;
+    public Image imgUserLevelDetail;
     public Animator anmtCurrentPet;
 
     [Header("Current Pet Stats")]
@@ -428,6 +428,37 @@ public class ManagerTop : MonoBehaviour
         ));
     }
 
+    void SetupImgLevel(int level, Image imgLvUser)
+    {
+        // Load sprite theo level
+        imgLvUser.sprite = Resources.Load<Sprite>("Image/hclv/level " + level);
+
+        // Get RectTransform
+        RectTransform rectTransform = imgLvUser.GetComponent<RectTransform>();
+
+        // Set size theo level
+        if (level >= 1 && level <= 9)
+        {
+            rectTransform.sizeDelta = new Vector2(40.61f, 35.88f);
+        }
+        else if (level >= 10 && level <= 14)
+        {
+            rectTransform.sizeDelta = new Vector2(43.79f, 37.9f);
+        }
+        else if (level >= 15 && level <= 47)
+        {
+            rectTransform.sizeDelta = new Vector2(61.35f, 63.51f);
+        }
+        else if (level >= 48 && level <= 49)
+        {
+            rectTransform.sizeDelta = new Vector2(70.85f, 73.35f);
+        }
+        else if (level >= 50 && level <= 60)
+        {
+            rectTransform.sizeDelta = new Vector2(114.54f, 95.67f);
+        }
+    }
+
     void DisplayUserDetail(UserDetailData userDetail)
     {
         if (panelDetailTop != null)
@@ -443,11 +474,7 @@ public class ManagerTop : MonoBehaviour
             AnimateText(txtUserNameDetail.gameObject, 0.1f);
         }
 
-        if (txtUserLevelDetail != null)
-        {
-            txtUserLevelDetail.text = "Level " + userDetail.level;
-            AnimateText(txtUserLevelDetail.gameObject, 0.15f);
-        }
+        SetupImgLevel(userDetail.level, imgUserLevelDetail);
 
         // Load hình ảnh user với animation
         if (imgUserDetail != null)

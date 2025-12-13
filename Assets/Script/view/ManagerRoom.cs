@@ -29,7 +29,7 @@ public class ManagerRoom : MonoBehaviour
     public Text txtVang;
     public Text txtCt;
     public Text txtNl;
-    public Text txtLvRoom;
+    public Image imgLvRoom;
     public Text txtManaRoom;
     public Text txtUsername;
     public Text txtCount;
@@ -698,6 +698,37 @@ public class ManagerRoom : MonoBehaviour
         return toggleObj;
     }
 
+    void SetupImgLevel(int level, Image imgLvUser)
+    {
+        // Load sprite theo level
+        imgLvUser.sprite = Resources.Load<Sprite>("Image/hclv/level " + level);
+
+        // Get RectTransform
+        RectTransform rectTransform = imgLvUser.GetComponent<RectTransform>();
+
+        // Set size theo level
+        if (level >= 1 && level <= 9)
+        {
+            rectTransform.sizeDelta = new Vector2(40.61f, 35.88f);
+        }
+        else if (level >= 10 && level <= 14)
+        {
+            rectTransform.sizeDelta = new Vector2(43.79f, 37.9f);
+        }
+        else if (level >= 15 && level <= 47)
+        {
+            rectTransform.sizeDelta = new Vector2(61.35f, 63.51f);
+        }
+        else if (level >= 48 && level <= 49)
+        {
+            rectTransform.sizeDelta = new Vector2(70.85f, 73.35f);
+        }
+        else if (level >= 50 && level <= 60)
+        {
+            rectTransform.sizeDelta = new Vector2(114.54f, 95.67f);
+        }
+    }
+
     void OnUserReceived(UserDTO user)
     {
         Debug.Log("[ManagerRoom] User data received");
@@ -718,10 +749,8 @@ public class ManagerRoom : MonoBehaviour
         {
             txtCt.text = user.requestAttack.ToString();
         }
-        if (txtLvRoom != null)
-        {
-            txtLvRoom.text = "Lv" + user.lever.ToString();
-        }
+
+        SetupImgLevel(user.lever, imgLvRoom);
         if (txtManaRoom != null)
         {
             txtManaRoom.text = user.energy + "/" + user.energyFull;
