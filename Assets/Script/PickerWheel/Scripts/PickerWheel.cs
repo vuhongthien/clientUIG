@@ -270,7 +270,7 @@ private void LateUpdate()
             Text amountText = pieceTrns.GetChild(2).GetComponent<Text>();
             if (amountText != null)
             {
-                amountText.text = piece.Amount > 1 ? piece.Amount.ToString() : "";
+                amountText.text = piece.Amount > 1 ? FormatVND(piece.Amount) : "";
             }
 
             // Xoay piece quanh tâm wheel
@@ -288,6 +288,11 @@ private void LateUpdate()
 
             Debug.Log($"[PickerWheel] Drew piece {index}: {piece.Label} at angle {rotationAngle}°");
         }
+
+        public static string FormatVND(long amount)
+    {
+        return amount.ToString("#,##0").Replace(",", ".");
+    }
 
         private GameObject InstantiatePiece()
         {

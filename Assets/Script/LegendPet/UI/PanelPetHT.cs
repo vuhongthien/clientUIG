@@ -527,15 +527,15 @@ namespace PokiGame.LegendPet
             SetTextIfNotNull(des, "");
 
             // Ẩn attribute images (optional)
-            if (imgAtribute != null)
-            {
-                imgAtribute.enabled = false;
-            }
+            // if (imgAtribute != null)
+            // {
+            //     imgAtribute.enabled = false;
+            // }
 
-            if (imgAtributeOther != null)
-            {
-                imgAtributeOther.enabled = false;
-            }
+            // if (imgAtributeOther != null)
+            // {
+            //     imgAtributeOther.enabled = false;
+            // }
         }
 
         /// <summary>

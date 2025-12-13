@@ -349,7 +349,7 @@ public class ShopManager : MonoBehaviour
         LeanTween.value(textComponent.gameObject, currentValue, targetValue, 0.5f)
             .setOnUpdate((float val) =>
             {
-                textComponent.text = Mathf.RoundToInt(val).ToString();
+                textComponent.text = FormatVND(Mathf.RoundToInt(val));
             })
             .setEaseOutQuad();
     }
@@ -1133,6 +1133,10 @@ public class ShopManager : MonoBehaviour
 
         pendingShopId = 0;
     }
+    public static string FormatVND(long amount)
+    {
+        return amount.ToString("#,##0").Replace(",", ".");
+    }
 
     void SetPriceWithPrefab(Text priceText, int price, string currencyType, ref GameObject cachedPriceObject, bool isOwned = false, string ownedText = "Đã sở hữu")
     {
@@ -1188,7 +1192,7 @@ public class ShopManager : MonoBehaviour
                 if (prefabText != null)
                 {
                     // Set giá và copy style từ prefab
-                    priceText.text = price.ToString();
+                    priceText.text = FormatVND(price);
                     priceText.color = prefabText.color;
                     priceText.font = prefabText.font;
                     priceText.fontSize = prefabText.fontSize;
@@ -1225,7 +1229,7 @@ public class ShopManager : MonoBehaviour
                 else
                 {
                     // Nếu không có prefab text, chỉ set giá
-                    priceText.text = price.ToString();
+                    priceText.text = FormatVND(price);
                     priceText.color = Color.white; // Đặt màu mặc định
                 }
             }

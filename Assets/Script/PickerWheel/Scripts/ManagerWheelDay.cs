@@ -355,13 +355,13 @@ public class ManagerWheelDay : MonoBehaviour
             }
             else
             {
-                txtBtnRun.text = $"Quay 1\n({spinCost:N0} Gold)";
+                txtBtnRun.text = $"Quay 1\n({FormatVND(spinCost):N0} Gold)";
             }
         }
 
         if (txtBtnRunMany != null)
         {
-            txtBtnRunMany.text = $"Quay 10\n({spinCost * 10:N0} Gold)";
+            txtBtnRunMany.text = $"Quay 10\n({FormatVND(spinCost * 10):N0} Gold)";
         }
     }
 
@@ -1012,11 +1012,11 @@ public class ManagerWheelDay : MonoBehaviour
         {
             if (reward.isDuplicate)
             {
-                txtAmount.text = $"+{reward.compensationGold:N0} Gold";
+                txtAmount.text = $"+{FormatVND(reward.compensationGold):N0} Gold";
             }
             else if (reward.amount > 1)
             {
-                txtAmount.text = "x" + reward.amount.ToString();
+                txtAmount.text = "x" + FormatVND(reward.amount);
             }
             else
             {
@@ -1027,7 +1027,10 @@ public class ManagerWheelDay : MonoBehaviour
         rewardObj.transform.localScale = Vector3.zero;
         LeanTween.scale(rewardObj, Vector3.one, 0.3f).setEase(LeanTweenType.easeOutBack);
     }
-
+    public static string FormatVND(long amount)
+    {
+        return amount.ToString("#,##0").Replace(",", ".");
+    }
     GameObject GetRewardPrefab(string prizeType)
     {
         switch (prizeType)
@@ -1149,7 +1152,7 @@ public class ManagerWheelDay : MonoBehaviour
             }
             else
             {
-                txtAmount.text = "x" + reward.amount.ToString();
+                txtAmount.text = "x" + FormatVND(reward.amount);
             }
         }
 

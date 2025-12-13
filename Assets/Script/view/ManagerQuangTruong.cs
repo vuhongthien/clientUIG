@@ -25,7 +25,8 @@ public class ManagerQuangTruong : MonoBehaviour
     public Text txtVang;
     public Text txtCt;
     public Text txtNl;
-    public Text txtLvUser;
+    public Image imgLvUser;
+    private string lvUser;
     public Text txtExp;
     public Text txtName;
     public string petId;
@@ -118,9 +119,9 @@ public class ManagerQuangTruong : MonoBehaviour
     public float bgmVolume = 0.5f;
     public bool loopBGM = true;
     [Header("Sound Effects")]
-public AudioClip clickSound;
-[Range(0f, 1f)]
-public float clickVolume = 0.7f;
+    public AudioClip clickSound;
+    [Range(0f, 1f)]
+    public float clickVolume = 0.7f;
 
     private void Awake()
     {
@@ -211,39 +212,39 @@ public float clickVolume = 0.7f;
         // Play music
         bgmAudioSource.Play();
         Debug.Log($"[BGM] Playing: {bgmClip.name} (Volume: {bgmVolume})");
-        
+
     }
     void SetupButtonSounds()
-{
-    if (clickSound == null)
     {
-        Debug.LogWarning("[Sound] Click sound not assigned!");
-        return;
-    }
-
-    // Set static variables
-    ButtonClickSound.clickSound = clickSound;
-    
-    // Tìm TẤT CẢ buttons trong scene (kể cả button đang bị ẩn)
-    Button[] allButtons = FindObjectsOfType<Button>(true); // true = include inactive
-    
-    int count = 0;
-    foreach (Button btn in allButtons)
-    {
-        // Kiểm tra xem đã có component chưa
-        ButtonClickSound clickSoundComponent = btn.GetComponent<ButtonClickSound>();
-        
-        if (clickSoundComponent == null)
+        if (clickSound == null)
         {
-            // Thêm component nếu chưa có
-            clickSoundComponent = btn.gameObject.AddComponent<ButtonClickSound>();
-            clickSoundComponent.volume = clickVolume;
-            count++;
+            Debug.LogWarning("[Sound] Click sound not assigned!");
+            return;
         }
+
+        // Set static variables
+        ButtonClickSound.clickSound = clickSound;
+
+        // Tìm TẤT CẢ buttons trong scene (kể cả button đang bị ẩn)
+        Button[] allButtons = FindObjectsOfType<Button>(true); // true = include inactive
+
+        int count = 0;
+        foreach (Button btn in allButtons)
+        {
+            // Kiểm tra xem đã có component chưa
+            ButtonClickSound clickSoundComponent = btn.GetComponent<ButtonClickSound>();
+
+            if (clickSoundComponent == null)
+            {
+                // Thêm component nếu chưa có
+                clickSoundComponent = btn.gameObject.AddComponent<ButtonClickSound>();
+                clickSoundComponent.volume = clickVolume;
+                count++;
+            }
+        }
+
+        Debug.Log($"[Sound] Added click sound to {count} buttons");
     }
-    
-    Debug.Log($"[Sound] Added click sound to {count} buttons");
-}
 
     /// <summary>
     /// Stop background music
@@ -1065,10 +1066,11 @@ public float clickVolume = 0.7f;
             EnergyManager.Instance.RefreshEnergyFromServer();
         }
 
-        txtVang.text = user.gold.ToString();
+        txtVang.text = FormatVND(user.gold);
         ruby = user.ruby;
-        txtCt.text = user.requestAttack.ToString();
-        txtLvUser.text = "Lv" + user.lever.ToString();
+        txtCt.text = FormatVND(user.requestAttack);
+        SetupImgLevel(user.lever, imgLvUser);
+        lvUser = user.lever.ToString();
         imgAvatar.sprite = Resources.Load<Sprite>("Image/Avt/" + user.avtId);
         UpdateMedalImage(user.lever);
         float expPercent = 0f;
@@ -1083,6 +1085,10 @@ public float clickVolume = 0.7f;
 
         UpdateWheelFlag(user.wheel);
         UpdateStarUI(user.starWhite, user.starBlue, user.starRed);
+    }
+    public static string FormatVND(long amount)
+    {
+        return amount.ToString("#,##0").Replace(",", ".");
     }
 
     void OnRefreshError(string error, bool silent)
@@ -1560,9 +1566,10 @@ public float clickVolume = 0.7f;
         }
         txtNl.text = user.energy + "/" + user.energyFull;
         ruby = user.ruby;
-        txtVang.text = user.gold.ToString();
-        txtCt.text = user.requestAttack.ToString();
-        txtLvUser.text = "Lv" + user.lever.ToString();
+        txtVang.text = FormatVND(user.gold);
+        txtCt.text = FormatVND(user.requestAttack);
+        SetupImgLevel(user.lever, imgLvUser);
+        lvUser = user.lever.ToString();
         imgAvatar.sprite = Resources.Load<Sprite>("Image/Avt/" + user.avtId);
         UpdateMedalImage(user.lever);
         float expPercent = 0f;
@@ -1589,6 +1596,37 @@ public float clickVolume = 0.7f;
         if (StarEventManager.Instance != null)
         {
             StarEventManager.Instance.UpdateStarCount(user.starWhite, user.starBlue, user.starRed);
+        }
+    }
+
+    void SetupImgLevel(int level, Image imgLvUser)
+    {
+        // Load sprite theo level
+        imgLvUser.sprite = Resources.Load<Sprite>("Image/hclv/level " + level);
+
+        // Get RectTransform
+        RectTransform rectTransform = imgLvUser.GetComponent<RectTransform>();
+
+        // Set size theo level
+        if (level >= 1 && level <= 9)
+        {
+            rectTransform.sizeDelta = new Vector2(40.61f, 35.88f);
+        }
+        else if (level >= 10 && level <= 14)
+        {
+            rectTransform.sizeDelta = new Vector2(43.79f, 37.9f);
+        }
+        else if (level >= 15 && level <= 47)
+        {
+            rectTransform.sizeDelta = new Vector2(61.35f, 63.51f);
+        }
+        else if (level >= 48 && level <= 49)
+        {
+            rectTransform.sizeDelta = new Vector2(70.85f, 73.35f);
+        }
+        else if (level >= 50 && level <= 60)
+        {
+            rectTransform.sizeDelta = new Vector2(114.54f, 95.67f);
         }
     }
 
