@@ -130,8 +130,8 @@ public class Board : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
     private List<GameObject> cardsInHand = new List<GameObject>();
     public CardData cardData;
-    private int HOTTURN = 5;
-    private int SUBHOTTURN = 1;
+    private int HOTTURN = 10;
+    private int SUBHOTTURN = 5;
     [Header("Energy System")]
     [Tooltip("Panel thông báo hết năng lượng")]
     public GameObject energyWarningPanel;
