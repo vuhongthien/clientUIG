@@ -43,7 +43,7 @@ public class CardUI : MonoBehaviour
     public float centerCardScale = 1f;
 
     [Tooltip("Kích thước card giữa màn hình")]
-    private Vector2 centerCardSize = new Vector2(50f, 65f);
+    private Vector2 centerCardSize = new Vector2(100f, 120f);
 
     [Header("Card Visual")]
     [Tooltip("Image object hiển thị card (child object)")]

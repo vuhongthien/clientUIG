@@ -1,7 +1,10 @@
 fileFormatVersion: 2
-guid: 9efc932306383c94295aae5e89a0317d
+guid: b3a09e7ea50bc634d8da4c9a6b1d9ce5
 TextureImporter:
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      213: -4087819832099808234
+    second: HT4_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -63,9 +66,9 @@ TextureImporter:
   compressionQualitySet: 0
   textureFormatSet: 0
   ignorePngGamma: 0
-  applyGammaDecoding: 1
+  applyGammaDecoding: 0
   swizzle: 50462976
-  cookieLightType: 1
+  cookieLightType: 0
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
@@ -121,7 +124,29 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: HT4_0
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 11
+        width: 361
+        height: 464
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61cd4e955852547c0800000000000000
+      internalID: -4087819832099808234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -135,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      HT4_0: -4087819832099808234
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
