@@ -7366,6 +7366,15 @@ MonoBehaviour:
   anmtUpdateStone: {fileID: 142581666}
   toggleUpgradeAll: {fileID: 1335633738}
   messageTextStone: {fileID: 0}
+  panelAnimDuration: 0.2
+  itemAnimDelay: 0.02
+  easeType: 27
+  bgmAudioSource: {fileID: 0}
+  bgmClip: {fileID: 8300000, guid: 9cc372ffb8a22524abb4221afc71c3f5, type: 3}
+  bgmVolume: 0.5
+  loopBGM: 1
+  clickSound: {fileID: 8300000, guid: fcf77559b4c484b4bb499c9a95c32e21, type: 3}
+  clickVolume: 0.7
 --- !u!1 &1251309369
 GameObject:
   m_ObjectHideFlags: 0
@@ -13798,7 +13807,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 33.48, y: -33.833}
+  m_AnchoredPosition: {x: 33.48, y: -33.832993}
   m_SizeDelta: {x: 202.69, y: 67.668}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2139888206

@@ -130,7 +130,8 @@ public class Board : MonoBehaviour
     private List<CardData> selectedCards = new List<CardData>();
     private List<GameObject> cardsInHand = new List<GameObject>();
     public CardData cardData;
-    private int HOTTURN = 15;
+    private int HOTTURN = 5;
+    private int SUBHOTTURN = 1;
     [Header("Energy System")]
     [Tooltip("Panel thông báo hết năng lượng")]
     public GameObject energyWarningPanel;
@@ -909,61 +910,77 @@ public class Board : MonoBehaviour
     }
 
     private void RefillBoard()
+{
+    int currentTurn = (active != null) ? active.TurnNumber : 0;
+
+    for (int i = 0; i < width; i++)
     {
-        bool isAfterTurn20 = (active != null && active.TurnNumber >= HOTTURN);
-
-        for (int i = 0; i < width; i++)
+        for (int j = 0; j < height; j++)
         {
-            for (int j = 0; j < height; j++)
+            if (allDots[i, j] == null)
             {
-                if (allDots[i, j] == null)
+                Vector2 tempPosition = new Vector2(i, j + offSet);
+
+                int dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                int maxAttempts = 100;
+                int attempts = 0;
+
+                // ✅ GÁN VIÊN TẠM VÀO MẢNG ĐỂ MatchesAt() HOẠT ĐỘNG
+                GameObject tempPiece = dots[dotToUse];
+
+                while (MatchesAt(i, j, tempPiece) && attempts < maxAttempts)
                 {
-                    Vector2 tempPosition = new Vector2(i, j + offSet);
+                    dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                    tempPiece = dots[dotToUse];
+                    attempts++;
+                }
 
-                    int dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                    int maxAttempts = 100;
-                    int attempts = 0;
+                // ✅ BÂY GIỜ MỚI SPAWN
+                GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
+                allDots[i, j] = piece; // ✅ GÁN NGAY
 
-                    // ✅ GÁN VIÊN TẠM VÀO MẢNG ĐỂ MatchesAt() HOẠT ĐỘNG
-                    GameObject tempPiece = dots[dotToUse];
+                Dot dotComponent = piece.GetComponent<Dot>();
+                dotComponent.row = j;
+                dotComponent.column = i;
+                piece.transform.parent = this.transform;
+                piece.name = "(" + i + "," + j + ")";
 
-                    while (MatchesAt(i, j, tempPiece) && attempts < maxAttempts)
+                // ✅ LOGIC MULTIPLIER THEO TURN
+                if (currentTurn >= HOTTURN) // Turn 10+: Tỉ lệ đầy đủ
+                {
+                    float roll = UnityEngine.Random.Range(0f, 100f);
+
+                    if (roll < 10f)
                     {
-                        dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                        tempPiece = dots[dotToUse];
-                        attempts++;
+                        dotComponent.multiplier = 4;
+                        CreateMultiplierText(piece, 4);
                     }
-
-                    // ✅ BÂY GIỜ MỚI SPAWN
-                    GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
-                    allDots[i, j] = piece; // ✅ GÁN NGAY
-
-                    Dot dotComponent = piece.GetComponent<Dot>();
-                    dotComponent.row = j;
-                    dotComponent.column = i;
-                    piece.transform.parent = this.transform;
-                    piece.name = "(" + i + "," + j + ")";
-
-                    // Logic multiplier (giữ nguyên)
-                    if (isAfterTurn20)
+                    else if (roll < 20f)
                     {
-                        float roll = UnityEngine.Random.Range(0f, 100f);
-
-                        if (roll < 10f)
-                        {
-                            dotComponent.multiplier = 3;
-                            CreateMultiplierText(piece, 3);
-                        }
-                        else if (roll < 25f)
-                        {
-                            dotComponent.multiplier = 2;
-                            CreateMultiplierText(piece, 2);
-                        }
+                        dotComponent.multiplier = 3;
+                        CreateMultiplierText(piece, 3);
+                    }
+                    else if (roll < 40f)
+                    {
+                        dotComponent.multiplier = 2;
+                        CreateMultiplierText(piece, 2);
                     }
                 }
+                else if (currentTurn >= SUBHOTTURN) // Turn 5-9: Chỉ có x2 với 20%
+                {
+                    float roll = UnityEngine.Random.Range(0f, 100f);
+                    
+                    if (roll < 20f)
+                    {
+                        dotComponent.multiplier = 2;
+                        CreateMultiplierText(piece, 2);
+                    }
+                }
+                // Turn 1-4: Không có multiplier
             }
         }
     }
+}
     /// <summary>
     /// Tạo text hiển thị multiplier trên viên
     /// </summary>

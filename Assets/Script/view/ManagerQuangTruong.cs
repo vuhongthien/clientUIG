@@ -24,6 +24,7 @@ public class ManagerQuangTruong : MonoBehaviour
     public Image imgAtributeOther;
     public Text txtVang;
     public Text txtCt;
+    public int txtCtint;
     public Text txtNl;
     public Image imgLvUser;
     private string lvUser;
@@ -1069,6 +1070,7 @@ public class ManagerQuangTruong : MonoBehaviour
         txtVang.text = FormatVND(user.gold);
         ruby = user.ruby;
         txtCt.text = FormatVND(user.requestAttack);
+        txtCtint = user.requestAttack;
         SetupImgLevel(user.lever, imgLvUser);
         lvUser = user.lever.ToString();
         imgAvatar.sprite = Resources.Load<Sprite>("Image/Avt/" + user.avtId);
@@ -1568,6 +1570,7 @@ public class ManagerQuangTruong : MonoBehaviour
         ruby = user.ruby;
         txtVang.text = FormatVND(user.gold);
         txtCt.text = FormatVND(user.requestAttack);
+        txtCtint = user.requestAttack;
         SetupImgLevel(user.lever, imgLvUser);
         lvUser = user.lever.ToString();
         imgAvatar.sprite = Resources.Load<Sprite>("Image/Avt/" + user.avtId);

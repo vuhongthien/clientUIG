@@ -102,9 +102,22 @@ public class ManagerKhoPet : MonoBehaviour
     private CanvasGroup panelUpdateStoneCanvasGroup;
     private CanvasGroup panelCardPetCanvasGroup;
 
+    [Header("Background Music")]
+    public AudioSource bgmAudioSource;
+    public AudioClip bgmClip;
+    [Range(0f, 1f)]
+    public float bgmVolume = 0.5f;
+    public bool loopBGM = true;
+    [Header("Sound Effects")]
+    public AudioClip clickSound;
+    [Range(0f, 1f)]
+    public float clickVolume = 0.7f;
+
     private void Start()
     {
         SetupCanvasGroups();
+        SetupButtonSounds();
+        PlayBackgroundMusic();
         StartCoroutine(LoadSceneAfterDelay());
 
         if (btnUpdate != null)
@@ -177,6 +190,164 @@ public class ManagerKhoPet : MonoBehaviour
                 messageTextStone.gameObject.SetActive(false);
             }
         }
+    }
+
+    
+
+    /// <summary>
+    /// Play background music
+    /// </summary>
+    void PlayBackgroundMusic()
+    {
+        if (bgmAudioSource == null)
+        {
+            // Tạo AudioSource nếu chưa có
+            bgmAudioSource = gameObject.AddComponent<AudioSource>();
+            Debug.Log("[BGM] Created new AudioSource");
+        }
+
+        if (bgmClip == null)
+        {
+            Debug.LogWarning("[BGM] No AudioClip assigned!");
+            return;
+        }
+
+        // Setup AudioSource
+        bgmAudioSource.clip = bgmClip;
+        bgmAudioSource.volume = bgmVolume;
+        bgmAudioSource.loop = loopBGM;
+        bgmAudioSource.playOnAwake = false;
+
+        // Play music
+        bgmAudioSource.Play();
+        Debug.Log($"[BGM] Playing: {bgmClip.name} (Volume: {bgmVolume})");
+
+    }
+    void SetupButtonSounds()
+    {
+        if (clickSound == null)
+        {
+            Debug.LogWarning("[Sound] Click sound not assigned!");
+            return;
+        }
+
+        // Set static variables
+        ButtonClickSound.clickSound = clickSound;
+
+        // Tìm TẤT CẢ buttons trong scene (kể cả button đang bị ẩn)
+        Button[] allButtons = FindObjectsOfType<Button>(true); // true = include inactive
+
+        int count = 0;
+        foreach (Button btn in allButtons)
+        {
+            // Kiểm tra xem đã có component chưa
+            ButtonClickSound clickSoundComponent = btn.GetComponent<ButtonClickSound>();
+
+            if (clickSoundComponent == null)
+            {
+                // Thêm component nếu chưa có
+                clickSoundComponent = btn.gameObject.AddComponent<ButtonClickSound>();
+                clickSoundComponent.volume = clickVolume;
+                count++;
+            }
+        }
+
+        Debug.Log($"[Sound] Added click sound to {count} buttons");
+    }
+
+    /// <summary>
+    /// Stop background music
+    /// </summary>
+    public void StopBackgroundMusic()
+    {
+        if (bgmAudioSource != null && bgmAudioSource.isPlaying)
+        {
+            bgmAudioSource.Stop();
+            Debug.Log("[BGM] Stopped");
+        }
+    }
+
+    /// <summary>
+    /// Pause background music
+    /// </summary>
+    public void PauseBackgroundMusic()
+    {
+        if (bgmAudioSource != null && bgmAudioSource.isPlaying)
+        {
+            bgmAudioSource.Pause();
+            Debug.Log("[BGM] Paused");
+        }
+    }
+
+    /// <summary>
+    /// Resume background music
+    /// </summary>
+    public void ResumeBackgroundMusic()
+    {
+        if (bgmAudioSource != null && !bgmAudioSource.isPlaying)
+        {
+            bgmAudioSource.UnPause();
+            Debug.Log("[BGM] Resumed");
+        }
+    }
+
+    /// <summary>
+    /// Set volume
+    /// </summary>
+    public void SetBGMVolume(float volume)
+    {
+        bgmVolume = Mathf.Clamp01(volume);
+        if (bgmAudioSource != null)
+        {
+            bgmAudioSource.volume = bgmVolume;
+            Debug.Log($"[BGM] Volume set to: {bgmVolume}");
+        }
+    }
+
+    /// <summary>
+    /// Fade in background music
+    /// </summary>
+    public void FadeInBGM(float duration = 2f)
+    {
+        if (bgmAudioSource == null) return;
+
+        bgmAudioSource.volume = 0f;
+        bgmAudioSource.Play();
+
+        LeanTween.value(gameObject, 0f, bgmVolume, duration)
+            .setOnUpdate((float val) =>
+            {
+                if (bgmAudioSource != null)
+                    bgmAudioSource.volume = val;
+            })
+            .setEase(LeanTweenType.easeInOutQuad);
+
+        Debug.Log($"[BGM] Fading in over {duration}s");
+    }
+
+    /// <summary>
+    /// Fade out background music
+    /// </summary>
+    public void FadeOutBGM(float duration = 2f, bool stopAfterFade = true)
+    {
+        if (bgmAudioSource == null) return;
+
+        LeanTween.value(gameObject, bgmAudioSource.volume, 0f, duration)
+            .setOnUpdate((float val) =>
+            {
+                if (bgmAudioSource != null)
+                    bgmAudioSource.volume = val;
+            })
+            .setOnComplete(() =>
+            {
+                if (stopAfterFade && bgmAudioSource != null)
+                {
+                    bgmAudioSource.Stop();
+                }
+            })
+            .setEase(LeanTweenType.easeInOutQuad);
+
+        Debug.Log($"[BGM] Fading out over {duration}s");
     }
 
     void SetupCanvasGroups()
@@ -486,7 +657,7 @@ public class ManagerKhoPet : MonoBehaviour
         {
             btnStone.interactable = false;
         }
-
+SetupButtonSounds();
         // ✅ THÊM: Animate stone upgrade item
         int index = stoneUpgradeListContainer.childCount - 1;
         AnimateItemAppear(stoneObj, index, 0.3f);
@@ -844,7 +1015,7 @@ public class ManagerKhoPet : MonoBehaviour
                 if (currentUser != null)
                 {
                     currentUser.gold = response.remainingGold;
-                    SetTextIfNotNull(txtVang, currentUser.gold.ToString());
+                    SetTextIfNotNull(txtVang, FormatVND(currentUser.gold));
                 }
             },
             (error) =>
@@ -1107,7 +1278,7 @@ public class ManagerKhoPet : MonoBehaviour
                 if (currentUser != null)
                 {
                     currentUser.gold = response.remainingGold;
-                    SetTextIfNotNull(txtVang, currentUser.gold.ToString());
+                    SetTextIfNotNull(txtVang, FormatVND(currentUser.gold));
                 }
             },
             (error) =>
@@ -1724,7 +1895,7 @@ public class ManagerKhoPet : MonoBehaviour
         TrySetupPetAnimation(petAnimator, petID);
 
         SetupPetInfo(petUIObject, pet, petID);
-
+SetupButtonSounds();
         // ✅ THÊM: Animate pet item khi spawn
         int index = petListContainer.childCount - 1;
         AnimateItemAppear(petUIObject, index);
@@ -1942,6 +2113,11 @@ public class ManagerKhoPet : MonoBehaviour
 
         LoadStonesForElement(elementType);
         LoadPetSkillCard(skillCardId, txtDes);
+    }
+
+    public static string FormatVND(long amount)
+    {
+        return amount.ToString("#,##0").Replace(",", ".");
     }
 
     void LoadStonesForElement(string elementType)
@@ -2654,8 +2830,8 @@ public class ManagerKhoPet : MonoBehaviour
     {
         currentUser = user;
         SetTextIfNotNull(txtNl, $"{user.energy}/{user.energyFull}");
-        SetTextIfNotNull(txtVang, user.gold.ToString());
-        SetTextIfNotNull(txtCt, user.requestAttack.ToString());
+        SetTextIfNotNull(txtVang, FormatVND(user.gold));
+        SetTextIfNotNull(txtCt, FormatVND(user.requestAttack));
 
         if (toggleProtection != null && toggleProtection.isOn && user.gold < 5000)
         {
@@ -2777,32 +2953,32 @@ public class ManagerKhoPet : MonoBehaviour
         textComponent.gameObject.SetActive(false);
     }
     // Thêm vào cuối class ManagerKhoPet
-void OnDestroy()
-{
-    LeanTween.cancel(gameObject);
-    
-    if (PanelUpdateStone != null)
-        LeanTween.cancel(PanelUpdateStone);
-    
-    if (panelUpdate != null)
-        LeanTween.cancel(panelUpdate);
-    
-    if (PanelCardPet != null)
-        LeanTween.cancel(PanelCardPet);
-    
-    // ✅ Cancel tất cả animations
-    LeanTween.cancelAll();
-}
+    void OnDestroy()
+    {
+        LeanTween.cancel(gameObject);
 
-void OnDisable()
-{
-    LeanTween.cancel(gameObject);
-}
+        if (PanelUpdateStone != null)
+            LeanTween.cancel(PanelUpdateStone);
 
-void OnApplicationQuit()
-{
-    LeanTween.cancelAll();
-}
+        if (panelUpdate != null)
+            LeanTween.cancel(panelUpdate);
+
+        if (PanelCardPet != null)
+            LeanTween.cancel(PanelCardPet);
+
+        // ✅ Cancel tất cả animations
+        LeanTween.cancelAll();
+    }
+
+    void OnDisable()
+    {
+        LeanTween.cancel(gameObject);
+    }
+
+    void OnApplicationQuit()
+    {
+        LeanTween.cancelAll();
+    }
 }
 
 [Serializable]

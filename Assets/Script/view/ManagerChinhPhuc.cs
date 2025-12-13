@@ -564,7 +564,7 @@ public class ManagerChinhPhuc : MonoBehaviour
                         string reA = (petEnemy.requestAttack * 0.08).ToString();
                         int petId = petEnemy.id;
 
-                        int userRequestAttack = int.Parse(ManagerQuangTruong.Instance.txtCt.text);
+                        int userRequestAttack = ManagerQuangTruong.Instance.txtCtint;
 
                         AddPetButtonAnimation(buttons[j].gameObject);
 
