@@ -162,9 +162,9 @@ namespace PokiGame.LegendPet
 
         private long GetCurrentUserId()
         {
-            if (PlayerPrefs.HasKey("UserId"))
+            if (PlayerPrefs.HasKey("userId"))
             {
-                return PlayerPrefs.GetInt("UserId");
+                return PlayerPrefs.GetInt("userId");
             }
             return 1;
         }
