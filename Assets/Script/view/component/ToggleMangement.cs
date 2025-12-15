@@ -17,6 +17,7 @@ public class ToggleManager : MonoBehaviour
     [Header("Colors")]
     public Color selectedColor;
     public Color defaultColor;
+    public System.Action<List<CardData>> OnCardsChanged;
 
     // ✅ THAY ĐỔI: Lưu danh sách các lần chọn (cho phép trùng cardId)
     private List<CardSelectionData> selectedCardsList = new List<CardSelectionData>();
@@ -179,50 +180,49 @@ public class ToggleManager : MonoBehaviour
     /// ✅ XỬ LÝ CHỌN CARD (KHÔNG GỌI API - CHỈ LƯU STATE)
     /// </summary>
     private void ProcessCardSelection(CardData card, int cardId, bool isAttack, Toggle toggle)
+{
+    // ✅ THÊM VÀO DANH SÁCH ĐÃ CHỌN
+    CardSelectionData selectionData = new CardSelectionData
     {
-        // ✅ THÊM VÀO DANH SÁCH ĐÃ CHỌN
-        CardSelectionData selectionData = new CardSelectionData
-        {
-            cardData = card,
-            selectionId = System.Guid.NewGuid().ToString(),
-            toggle = toggle
-        };
-        
-        selectedCardsList.Add(selectionData);
-        
-        // ✅ XỬ LÝ THEO LOẠI THẺ
-        if (isAttack)
-        {
-            // ✅ THÊM VÀO DANH SÁCH ATTACK ĐÃ CHỌN
-            selectedAttackCardIds.Add(cardId);
-            Debug.Log($"[ToggleManager] ✓ Chọn thẻ ATTACK {card.name} - Tổng: {selectedCardsList.Count}/{maxSelected}");
-        }
-        else
-        {
-            // ✅ TĂNG COUNT CHO THẺ THƯỜNG/BUFF
-            if (!selectedCountByCardId.ContainsKey(cardId))
-            {
-                selectedCountByCardId[cardId] = 0;
-            }
-            selectedCountByCardId[cardId]++;
-            Debug.Log($"[ToggleManager] ✓ Chọn {card.name} ({selectedCountByCardId[cardId]}/{card.count}) - Tổng: {selectedCardsList.Count}/{maxSelected}");
-        }
-
-        // ✅ HIỂN THỊ THẺ ĐÃ CHỌN
-        AddSelectedImage(selectionData);
-
-        // ✅ CẬP NHẬT UI
-        if (isAttack)
-        {
-            // ✅ VÔ HIỆU HÓA TOGGLE SAU KHI CHỌN
-            UpdateToggleInteractable(toggle);
-        }
-        else
-        {
-            // ✅ CẬP NHẬT TEXT COUNT
-            UpdateToggleCountText(cardId);
-        }
+        cardData = card,
+        selectionId = System.Guid.NewGuid().ToString(),
+        toggle = toggle
+    };
+    
+    selectedCardsList.Add(selectionData);
+    
+    // ✅ XỬ LÝ THEO LOẠI THẺ
+    if (isAttack)
+    {
+        selectedAttackCardIds.Add(cardId);
+        Debug.Log($"[ToggleManager] ✓ Chọn thẻ ATTACK {card.name} - Tổng: {selectedCardsList.Count}/{maxSelected}");
     }
+    else
+    {
+        if (!selectedCountByCardId.ContainsKey(cardId))
+        {
+            selectedCountByCardId[cardId] = 0;
+        }
+        selectedCountByCardId[cardId]++;
+        Debug.Log($"[ToggleManager] ✓ Chọn {card.name} ({selectedCountByCardId[cardId]}/{card.count}) - Tổng: {selectedCardsList.Count}/{maxSelected}");
+    }
+
+    // ✅ HIỂN THỊ THẺ ĐÃ CHỌN
+    AddSelectedImage(selectionData);
+
+    // ✅ CẬP NHẬT UI
+    if (isAttack)
+    {
+        UpdateToggleInteractable(toggle);
+    }
+    else
+    {
+        UpdateToggleCountText(cardId);
+    }
+
+    // ✅ THÊM: NOTIFY CARDS ĐÃ THAY ĐỔI
+    NotifyCardsChanged();
+}
 
     /// <summary>
     /// ✅ THÊM ẢNH VÀO DISPLAY PANEL - HỖ TRỢ CẢ TOGGLE VÀ SELECTIONDATA
@@ -291,49 +291,73 @@ public class ToggleManager : MonoBehaviour
     /// ✅ XÓA THẺ ĐÃ CHỌN (khi user click vào ảnh trong displayPanel)
     /// </summary>
     public void RemoveSelectedCard(CardSelectionData selectionData)
+{
+    if (selectionData == null) return;
+
+    int cardId = (int)selectionData.cardData.cardId;
+    bool isAttack = IsAttackCard(selectionData.cardData);
+
+    // ✅ XÓA KHỎI DANH SÁCH
+    selectedCardsList.Remove(selectionData);
+
+    // ✅ XỬ LÝ THEO LOẠI THẺ
+    if (isAttack)
     {
-        if (selectionData == null) return;
-
-        int cardId = (int)selectionData.cardData.cardId;
-        bool isAttack = IsAttackCard(selectionData.cardData);
-
-        // ✅ XÓA KHỎI DANH SÁCH
-        selectedCardsList.Remove(selectionData);
-
-        // ✅ XỬ LÝ THEO LOẠI THẺ
-        if (isAttack)
-        {
-            // ✅ XÓA KHỎI DANH SÁCH ATTACK ĐÃ CHỌN
-            selectedAttackCardIds.Remove(cardId);
-            Debug.Log($"[ToggleManager] ✓ Xóa thẻ ATTACK {selectionData.cardData.name} - Tổng: {selectedCardsList.Count}/{maxSelected}");
-            
-            // ✅ BẬT LẠI TOGGLE
-            UpdateToggleInteractable(selectionData.toggle);
-        }
-        else
-        {
-            // ✅ GIẢM COUNT CHO THẺ THƯỜNG
-            if (selectedCountByCardId.ContainsKey(cardId))
-            {
-                selectedCountByCardId[cardId]--;
-                
-                if (selectedCountByCardId[cardId] < 0)
-                {
-                    selectedCountByCardId[cardId] = 0;
-                }
-            }
-            Debug.Log($"[ToggleManager] ✓ Xóa {selectionData.cardData.name} ({selectedCountByCardId[cardId]}/{selectionData.cardData.count}) - Tổng: {selectedCardsList.Count}/{maxSelected}");
-            
-            // ✅ CẬP NHẬT TEXT COUNT
-            UpdateToggleCountText(cardId);
-        }
-
-        // ✅ XÓA KHỎI DICTIONARY
-        if (selectedImagesBySelectionId.ContainsKey(selectionData.selectionId))
-        {
-            selectedImagesBySelectionId.Remove(selectionData.selectionId);
-        }
+        selectedAttackCardIds.Remove(cardId);
+        Debug.Log($"[ToggleManager] ✓ Xóa thẻ ATTACK {selectionData.cardData.name} - Tổng: {selectedCardsList.Count}/{maxSelected}");
+        UpdateToggleInteractable(selectionData.toggle);
     }
+    else
+    {
+        if (selectedCountByCardId.ContainsKey(cardId))
+        {
+            selectedCountByCardId[cardId]--;
+            if (selectedCountByCardId[cardId] < 0)
+            {
+                selectedCountByCardId[cardId] = 0;
+            }
+        }
+        Debug.Log($"[ToggleManager] ✓ Xóa {selectionData.cardData.name} ({selectedCountByCardId[cardId]}/{selectionData.cardData.count}) - Tổng: {selectedCardsList.Count}/{maxSelected}");
+        UpdateToggleCountText(cardId);
+    }
+
+    // ✅ XÓA KHỎI DICTIONARY
+    if (selectedImagesBySelectionId.ContainsKey(selectionData.selectionId))
+    {
+        selectedImagesBySelectionId.Remove(selectionData.selectionId);
+    }
+
+    // ✅ THÊM: NOTIFY CARDS ĐÃ THAY ĐỔI
+    NotifyCardsChanged();
+}
+
+/// <summary>
+/// ✅ XÓA CARD THEO INDEX (dùng cho MemberCardUI)
+/// </summary>
+public void RemoveSelectedCardByIndex(int index)
+{
+    if (index < 0 || index >= selectedCardsList.Count)
+    {
+        Debug.LogWarning($"[ToggleManager] Invalid index: {index}");
+        return;
+    }
+
+    CardSelectionData selectionData = selectedCardsList[index];
+    RemoveSelectedCard(selectionData);
+}
+
+/// <summary>
+/// ✅ NOTIFY KHI CARDS THAY ĐỔI
+/// </summary>
+private void NotifyCardsChanged()
+{
+    List<CardData> currentCards = GetSelectedCards();
+    
+    Debug.Log($"[ToggleManager] → Notifying cards changed: {currentCards.Count} cards");
+    
+    // ✅ GỌI CALLBACK NẾU CÓ
+    OnCardsChanged?.Invoke(currentCards);
+}
 
     /// <summary>
     /// ✅ CẬP NHẬT TRẠNG THÁI INTERACTABLE CỦA TOGGLE

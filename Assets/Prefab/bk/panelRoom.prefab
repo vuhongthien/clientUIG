@@ -3273,6 +3273,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3472989485375023103, guid: bd4bb7dc810c1b4489f42f6bed610ac1, type: 3}
+      propertyPath: m_SortingLayer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9104988934289627830, guid: bd4bb7dc810c1b4489f42f6bed610ac1, type: 3}
       propertyPath: m_Name
       value: userPlayer

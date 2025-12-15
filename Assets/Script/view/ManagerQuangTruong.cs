@@ -123,9 +123,11 @@ public class ManagerQuangTruong : MonoBehaviour
     public AudioClip clickSound;
     [Range(0f, 1f)]
     public float clickVolume = 0.7f;
+    public UserDTO userHome;
 
     private void Awake()
     {
+        MainThreadDispatcher.Instance.gameObject.SetActive(true);
         if (Instance == null)
         {
             Instance = this;
@@ -179,7 +181,7 @@ public class ManagerQuangTruong : MonoBehaviour
         {
             btnWheelDay.onClick.AddListener(OpenWheelDay);
         }
-
+        
         StartCoroutine(LoadSceneAfterDelay());
     }
 
@@ -1121,7 +1123,7 @@ public class ManagerQuangTruong : MonoBehaviour
 
     private IEnumerator LoadSceneAfterDelay()
     {
-        int userId = PlayerPrefs.GetInt("userId", 0);
+        int userId = PlayerPrefs.GetInt("userId", 1);
         Debug.Log("userId: " + userId);
 
         // ✅ SHOW LOADING NGAY TỪ ĐẦU
@@ -1562,6 +1564,8 @@ public class ManagerQuangTruong : MonoBehaviour
 
     void OnUserReceived(UserDTO user)
     {
+        userHome = user;
+        RoomWebSocketManager.Instance.Connect(userHome.id, userHome.name, userHome.avtId, userHome.lever);
         if (EnergyManager.Instance == null && txtNl != null)
         {
             txtNl.text = user.energy + "/" + user.energyFull;

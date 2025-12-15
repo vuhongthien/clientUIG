@@ -292,4 +292,8 @@ public class APIConfig : MonoBehaviour
     {
         return $"{BASE_URL}/reward/{userId}/gold";
     }
+    public static string JOIN_ROOM(long roomId, int userId)
+{
+    return $"{BASE_URL}/api/room/join?roomId={roomId}&userId={userId}";
+}
 }
