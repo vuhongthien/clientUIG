@@ -185,7 +185,7 @@ public class Board : MonoBehaviour
         }
         else
         {
-            enemyPetElement = PlayerPrefs.GetString("elementType", "Fire");
+            enemyPetElement = PlayerPrefs.GetString("BossElementType", "Fire");
             Debug.Log($"[BOARD] Normal Battle - Using Enemy Pet Element: {enemyPetElement}");
         }
         // LoadCardsFromPlayerPrefs();

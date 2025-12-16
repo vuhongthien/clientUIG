@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using DG.Tweening;
 using UnityEngine.Events;
 using System.Collections.Generic;
-using Unity.Android.Gradle.Manifest;
+// ✅ REMOVED: using Unity.Android.Gradle.Manifest; - Không cần thiết!
 
 namespace EasyUI.PickerWheelUI
 {
@@ -66,37 +66,37 @@ namespace EasyUI.PickerWheelUI
 
         private bool needsRegenerate = false;
 
-public void SetupWheel()
-{
-    if (wheelPieces == null || wheelPieces.Length == 0)
-    {
-        Debug.LogError("[PickerWheel] wheelPieces is empty!");
-        return;
-    }
+        public void SetupWheel()
+        {
+            if (wheelPieces == null || wheelPieces.Length == 0)
+            {
+                Debug.LogError("[PickerWheel] wheelPieces is empty!");
+                return;
+            }
 
-    _isSpinning = false;
+            _isSpinning = false;
 
-    if (isGenerated)
-    {
-        // Đánh dấu cần regenerate
-        isGenerated = false;
-        ClearWheel();
-        needsRegenerate = true;
-    }
-    else
-    {
-        SetupWheelImmediate();
-    }
-}
+            if (isGenerated)
+            {
+                // Đánh dấu cần regenerate
+                isGenerated = false;
+                ClearWheel();
+                needsRegenerate = true;
+            }
+            else
+            {
+                SetupWheelImmediate();
+            }
+        }
 
-private void LateUpdate()
-{
-    if (needsRegenerate)
-    {
-        needsRegenerate = false;
-        SetupWheelImmediate();
-    }
-}
+        private void LateUpdate()
+        {
+            if (needsRegenerate)
+            {
+                needsRegenerate = false;
+                SetupWheelImmediate();
+            }
+        }
 
         private System.Collections.IEnumerator SetupWheelCoroutine()
         {
@@ -290,9 +290,9 @@ private void LateUpdate()
         }
 
         public static string FormatVND(long amount)
-    {
-        return amount.ToString("#,##0").Replace(",", ".");
-    }
+        {
+            return amount.ToString("#,##0").Replace(",", ".");
+        }
 
         private GameObject InstantiatePiece()
         {
@@ -483,12 +483,12 @@ private void LateUpdate()
             if (wheelPieces != null && (wheelPieces.Length > piecesMax || wheelPieces.Length < piecesMin))
                 Debug.LogError("[PickerWheel] Pieces length must be between " + piecesMin + " and " + piecesMax);
         }
-        public void ResetWheelRotation(float duration = 0.5f, Action onComplete = null)
+
+        public void ResetWheelRotation(float duration = 0.5f, System.Action onComplete = null)
         {
             wheelCircle.DOKill(); // Kill animation cũ
             wheelCircle.DORotate(Vector3.zero, duration, RotateMode.FastBeyond360)
                 .SetEase(Ease.OutCubic); // Quay về 0 mượt mà
         }
     }
-
 }

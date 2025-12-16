@@ -493,7 +493,7 @@ public class ManagerRoom : MonoBehaviour
         }
 
         OnPetClicked(room.petId.ToString());
-
+Debug.LogWarning("[ManagerRoom] -----------------> elementType: "+ room.elementType);
         PlayerPrefs.SetInt("userPetId", room.petId);
         PlayerPrefs.SetInt("count", room.count);
         PlayerPrefs.SetInt("requestPass", room.requestPass);
