@@ -123,6 +123,9 @@ public class ManagerQuangTruong : MonoBehaviour
     public AudioClip clickSound;
     [Range(0f, 1f)]
     public float clickVolume = 0.7f;
+    [Header("World Chat")]
+    public ChatManager chatManager;
+    public Button btnWorldChat;
 
     private void Awake()
     {
@@ -179,20 +182,37 @@ public class ManagerQuangTruong : MonoBehaviour
         {
             btnWheelDay.onClick.AddListener(OpenWheelDay);
         }
-LoadAudioSettings();
+        if (btnWorldChat != null)
+        {
+            btnWorldChat.onClick.AddListener(OpenWorldChat);
+        }
+        LoadAudioSettings();
+
         StartCoroutine(LoadSceneAfterDelay());
     }
 
-/// <summary>
-/// ✅ Load và áp dụng audio settings từ PlayerPrefs
-/// </summary>
-void LoadAudioSettings()
-{
-    AudioSettings settings = AudioSettingsManager.GetSavedSettings();
-    SetBGMVolume(settings.bgmVolume * settings.masterVolume);
-    
-    Debug.Log($"[QuangTruong] Audio settings loaded: BGM={settings.bgmVolume}");
-}
+    public void OpenWorldChat()
+    {
+        if (chatManager != null)
+        {
+            chatManager.ToggleChat();
+        }
+        else
+        {
+            Debug.LogError("[ManagerQuangTruong] ChatManager is null!");
+        }
+    }
+
+    /// <summary>
+    /// ✅ Load và áp dụng audio settings từ PlayerPrefs
+    /// </summary>
+    void LoadAudioSettings()
+    {
+        AudioSettings settings = AudioSettingsManager.GetSavedSettings();
+        SetBGMVolume(settings.bgmVolume * settings.masterVolume);
+
+        Debug.Log($"[QuangTruong] Audio settings loaded: BGM={settings.bgmVolume}");
+    }
 
 
     /// <summary>
@@ -1209,15 +1229,22 @@ void LoadAudioSettings()
         // ✅ BƯỚC 2: LOAD DATA CHINH PHỤC
         Debug.Log("[ManagerQuangTruong] [2/7] Loading ChinhPhuc data...");
         ManagerChinhPhuc chinhPhucManager = panelChinhPhuc.GetComponent<ManagerChinhPhuc>();
-        chinhPhucManager.InitializeAndLoadData();
+        Debug.Log("[ManagerQuangTruong] [2/7] Loading ChinhPhuc data...");
 
-        yield return new WaitForSeconds(1.0f); // Đợi API
-        Debug.Log("[ManagerQuangTruong] ✓ ChinhPhuc data loaded");
+        bool chinhPhucLoaded = false;
 
-        // ✅ ĐẢM BẢO LOADING VẪN Ở TRÊN
+        chinhPhucManager.InitializeAndLoadData(() =>
+        {
+            chinhPhucLoaded = true; // ✅ ĐÁnh dấu đã xong
+            Debug.Log("[ManagerQuangTruong] ✓ ChinhPhuc data loaded");
+        });
+
+        // ✅ ĐỢI CHO ĐẾN KHI THỰC SỰ XONG
+        yield return new WaitUntil(() => chinhPhucLoaded);
+
         KeepLoadingOnTop();
 
-        // ✅ BƯỚC 3: RESTORE PANEL CỤ THỂ
+        // ✅ BƯỚC 3: RESTORE PANEL
         if (panelIndex >= 0)
         {
             Debug.Log($"[ManagerQuangTruong] [3/7] Restoring panel {panelIndex}...");
@@ -1593,7 +1620,14 @@ void LoadAudioSettings()
         txtName.text = user.name;
         expslider.maxValue = 100f;
         expslider.value = expPercent;
-
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.Instance.ConnectWebSocket(user.name);
+        }
+        else
+        {
+            Debug.LogError("[ManagerQuangTruong] ChatManager.Instance is NULL!");
+        }
         UpdateWheelFlag(user.wheel);
 
         PlayerPrefs.SetInt("StarWhite", user.starWhite);

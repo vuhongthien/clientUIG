@@ -226,9 +226,9 @@ public class ManagerChinhPhuc : MonoBehaviour
     /// <summary>
     /// Method này được gọi từ ManagerQuangTruong khi nhấn button "Chinh Phục"
     /// </summary>
-    public void InitializeAndLoadData()
+    public void InitializeAndLoadData(System.Action onComplete = null)
     {
-        StartCoroutine(LoadDataCoroutine());
+        StartCoroutine(LoadDataCoroutine(onComplete));
     }
 
     // ✅ THAY THẾ METHOD LoadDataCoroutine() TRONG ManagerChinhPhuc
@@ -236,7 +236,7 @@ public class ManagerChinhPhuc : MonoBehaviour
     /// <summary>
     /// ✅ IMPROVED: Load data với loading - Hide loading khi xong
     /// </summary>
-    private IEnumerator LoadDataCoroutine()
+    private IEnumerator LoadDataCoroutine(System.Action onComplete)
     {
         // Nếu đã có cached data, không cần load lại
         if (isDataLoaded && cachedPetData != null && cachedPetData.Count > 0)
@@ -312,6 +312,11 @@ public class ManagerChinhPhuc : MonoBehaviour
         {
             OnError(errorMessage);
         }
+        yield return new WaitForSeconds(0.5f); // Buffer time
+
+        onComplete?.Invoke(); // ✅ GỌI CALLBACK
+
+        Debug.Log("[ManagerChinhPhuc] Data loaded completely!");
     }
 
     /// <summary>
