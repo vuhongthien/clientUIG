@@ -144,6 +144,8 @@ public class Board : MonoBehaviour
 
     private bool hasShownEnergyWarning = false;
     private int lastCheckedEnergy = -1;
+    [Header("Audio Settings")]
+    private AudioSettingsManager audioSettingsManager;
 
     public static Board Instance { get; private set; }
 
@@ -165,7 +167,28 @@ public class Board : MonoBehaviour
         findMaches = FindFirstObjectByType<FindMatches>();
         active = FindFirstObjectByType<Active>();
 
+        LoadAudioSettings();
+    }
+    void LoadAudioSettings()
+    {
+        // Tìm AudioSettingsManager trong scene (nếu có)
+        audioSettingsManager = FindObjectOfType<AudioSettingsManager>();
 
+        // Load settings từ PlayerPrefs
+        AudioSettings settings = AudioSettingsManager.GetSavedSettings();
+
+        // Áp dụng cho AudioManager
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SetBGMVolume(settings.bgmVolume * settings.masterVolume);
+            AudioManager.Instance.SetSFXVolume(settings.sfxVolume * settings.masterVolume);
+
+            Debug.Log($"[Board] Audio settings loaded: Master={settings.masterVolume}, BGM={settings.bgmVolume}, SFX={settings.sfxVolume}");
+        }
+        else
+        {
+            Debug.LogWarning("[Board] AudioManager not found!");
+        }
     }
 
     /// <summary>
@@ -173,7 +196,6 @@ public class Board : MonoBehaviour
     /// </summary>
     public void InitializeCards()
     {
-        Debug.Log("[Board] Initializing cards with API data...");
         // ✅ KIỂM TRA BOSS BATTLE
         isBossBattle = PlayerPrefs.GetString("IsBossBattle", "false") == "true";
 
@@ -181,19 +203,16 @@ public class Board : MonoBehaviour
         if (isBossBattle && PlayerPrefs.HasKey("BossElementType"))
         {
             enemyPetElement = PlayerPrefs.GetString("BossElementType", "Fire");
-            Debug.Log($"[BOARD] Boss Battle - Using Boss Element: {enemyPetElement}");
         }
         else
         {
             enemyPetElement = PlayerPrefs.GetString("BossElementType", "Fire");
-            Debug.Log($"[BOARD] Normal Battle - Using Enemy Pet Element: {enemyPetElement}");
         }
         // LoadCardsFromPlayerPrefs();
         enemyPetId = PlayerPrefs.GetInt("SelectedPetId", 1);
         currentCount = PlayerPrefs.GetInt("count", 0);
         requestPass = PlayerPrefs.GetInt("requestPass", 5);
 
-        Debug.Log($"[BOARD] Is Boss Battle: {isBossBattle}");
 
         // Hide result panel initially
         if (panelResult != null)
@@ -212,7 +231,6 @@ public class Board : MonoBehaviour
             else
             {
                 pieces[i] = null;
-                Debug.LogWarning($"No SpriteRenderer found on GameObject: {dots[i].name}");
             }
         }
 
@@ -236,15 +254,10 @@ public class Board : MonoBehaviour
         allDots = new GameObject[width, height];
         StartCoroutine(setUp());
 
-        Debug.Log($"[GAME] Initialized: count={currentCount}/{requestPass}, enemyPet={enemyPetId}, element={enemyPetElement}");
         // Load card huyền thoại từ API
         if (cardData != null)
         {
             CreateCardHT(cardData);
-        }
-        else
-        {
-            Debug.LogWarning("[Board] No legend card data available!");
         }
 
         // Load cards thường từ PlayerPrefs
@@ -266,7 +279,6 @@ public class Board : MonoBehaviour
         {
             isAutoMoveInProgress = true;
             lastAutoMoveTime = Time.time;
-            Debug.Log($"[AI] Starting auto-move at {Time.time}");
             StartCoroutine(AutoMoveCoroutine());
         }
     }
@@ -280,18 +292,15 @@ public class Board : MonoBehaviour
         isProcessingUI = false;
         hasDestroyedThisTurn = false;
         lastAutoMoveTime = Time.time;
-        Debug.Log($"[BOARD] Turn {active.TurnNumber} started - Entity {entityIndex}");
         StartCoroutine(UpdateTurnUI(entityIndex));
     }
 
     private void HandleTurnStart(int entityIndex)
     {
-        Debug.Log($"[BOARD] Received TurnStart event for entity {entityIndex}");
     }
 
     private void HandleTurnEnd()
     {
-        Debug.Log($"[BOARD] Turn ended");
         ResetMoveCounters();
     }
 
@@ -304,7 +313,6 @@ public class Board : MonoBehaviour
         imgTurnP.SetActive(isPlayer);
         imgTurnE.SetActive(!isPlayer);
 
-        Debug.Log($"[UI] Turn {active.TurnNumber} - {(isPlayer ? "Player" : "NPC")}");
 
         if (isPlayer)
         {
@@ -350,7 +358,6 @@ public class Board : MonoBehaviour
         // ✅ Kiểm tra kỹ trước khi chạy
         if (active == null || !active.IsNPCTurn || isProcessingUI || hasDestroyedThisTurn)
         {
-            Debug.LogWarning("[AI] Cannot move: invalid state");
             isAutoMoveInProgress = false;
             yield break;
         }
@@ -361,7 +368,6 @@ public class Board : MonoBehaviour
         // ✅ Kiểm tra lại sau delay
         if (active == null || !active.IsNPCTurn || isProcessingUI || hasDestroyedThisTurn)
         {
-            Debug.LogWarning("[AI] State changed during delay");
             isAutoMoveInProgress = false;
             yield break;
         }
@@ -413,7 +419,6 @@ public class Board : MonoBehaviour
 
         if (scoredMoves.Count == 0)
         {
-            Debug.LogWarning("[AI] No valid moves found!");
             isAutoMoveInProgress = false;
             yield break;
         }
@@ -442,29 +447,22 @@ public class Board : MonoBehaviour
         Dot Dot = bestMove.dot.GetComponent<Dot>();
         if (Dot == null)
         {
-            Debug.LogError("[AI] Dot component not found!");
             isAutoMoveInProgress = false;
             yield break;
         }
 
-        // === THỰC HIỆN NƯỚC ĐI ===
         int deltaX = bestMove.targetX - Dot.column;
         int deltaY = bestMove.targetY - Dot.row;
 
-        Debug.Log($"[AI] Move: ({Dot.column},{Dot.row}) → ({bestMove.targetX},{bestMove.targetY}), Score: {bestMove.score:F1}");
 
-        // ✅ SET FLAG TRƯỚC KHI MOVE
         hasDestroyedThisTurn = true;
 
         PerformMove(Dot, deltaX, deltaY);
 
         yield return new WaitForSeconds(0.5f);
 
-        // ✅ GỌI DestroyMatches (HandleUI() sẽ reset flags)
         DestroyMatches();
 
-        // ✅ KHÔNG RESET isAutoMoveInProgress ở đây vì HandleUI() sẽ xử lý
-        Debug.Log("[AI] AutoMove completed, waiting for HandleUI()...");
     }
 
     private bool SimulateHasVangDotInCombo(GameObject movedDot, int targetX, int targetY)
@@ -910,77 +908,77 @@ public class Board : MonoBehaviour
     }
 
     private void RefillBoard()
-{
-    int currentTurn = (active != null) ? active.TurnNumber : 0;
-
-    for (int i = 0; i < width; i++)
     {
-        for (int j = 0; j < height; j++)
+        int currentTurn = (active != null) ? active.TurnNumber : 0;
+
+        for (int i = 0; i < width; i++)
         {
-            if (allDots[i, j] == null)
+            for (int j = 0; j < height; j++)
             {
-                Vector2 tempPosition = new Vector2(i, j + offSet);
-
-                int dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                int maxAttempts = 100;
-                int attempts = 0;
-
-                // ✅ GÁN VIÊN TẠM VÀO MẢNG ĐỂ MatchesAt() HOẠT ĐỘNG
-                GameObject tempPiece = dots[dotToUse];
-
-                while (MatchesAt(i, j, tempPiece) && attempts < maxAttempts)
+                if (allDots[i, j] == null)
                 {
-                    dotToUse = UnityEngine.Random.Range(0, dots.Length);
-                    tempPiece = dots[dotToUse];
-                    attempts++;
+                    Vector2 tempPosition = new Vector2(i, j + offSet);
+
+                    int dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                    int maxAttempts = 100;
+                    int attempts = 0;
+
+                    // ✅ GÁN VIÊN TẠM VÀO MẢNG ĐỂ MatchesAt() HOẠT ĐỘNG
+                    GameObject tempPiece = dots[dotToUse];
+
+                    while (MatchesAt(i, j, tempPiece) && attempts < maxAttempts)
+                    {
+                        dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                        tempPiece = dots[dotToUse];
+                        attempts++;
+                    }
+
+                    // ✅ BÂY GIỜ MỚI SPAWN
+                    GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
+                    allDots[i, j] = piece; // ✅ GÁN NGAY
+
+                    Dot dotComponent = piece.GetComponent<Dot>();
+                    dotComponent.row = j;
+                    dotComponent.column = i;
+                    piece.transform.parent = this.transform;
+                    piece.name = "(" + i + "," + j + ")";
+
+                    // ✅ LOGIC MULTIPLIER THEO TURN
+                    if (currentTurn >= HOTTURN) // Turn 10+: Tỉ lệ đầy đủ
+                    {
+                        float roll = UnityEngine.Random.Range(0f, 100f);
+
+                        if (roll < 10f)
+                        {
+                            dotComponent.multiplier = 4;
+                            CreateMultiplierText(piece, 4);
+                        }
+                        else if (roll < 20f)
+                        {
+                            dotComponent.multiplier = 3;
+                            CreateMultiplierText(piece, 3);
+                        }
+                        else if (roll < 40f)
+                        {
+                            dotComponent.multiplier = 2;
+                            CreateMultiplierText(piece, 2);
+                        }
+                    }
+                    else if (currentTurn >= SUBHOTTURN) // Turn 5-9: Chỉ có x2 với 20%
+                    {
+                        float roll = UnityEngine.Random.Range(0f, 100f);
+
+                        if (roll < 20f)
+                        {
+                            dotComponent.multiplier = 2;
+                            CreateMultiplierText(piece, 2);
+                        }
+                    }
+                    // Turn 1-4: Không có multiplier
                 }
-
-                // ✅ BÂY GIỜ MỚI SPAWN
-                GameObject piece = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
-                allDots[i, j] = piece; // ✅ GÁN NGAY
-
-                Dot dotComponent = piece.GetComponent<Dot>();
-                dotComponent.row = j;
-                dotComponent.column = i;
-                piece.transform.parent = this.transform;
-                piece.name = "(" + i + "," + j + ")";
-
-                // ✅ LOGIC MULTIPLIER THEO TURN
-                if (currentTurn >= HOTTURN) // Turn 10+: Tỉ lệ đầy đủ
-                {
-                    float roll = UnityEngine.Random.Range(0f, 100f);
-
-                    if (roll < 10f)
-                    {
-                        dotComponent.multiplier = 4;
-                        CreateMultiplierText(piece, 4);
-                    }
-                    else if (roll < 20f)
-                    {
-                        dotComponent.multiplier = 3;
-                        CreateMultiplierText(piece, 3);
-                    }
-                    else if (roll < 40f)
-                    {
-                        dotComponent.multiplier = 2;
-                        CreateMultiplierText(piece, 2);
-                    }
-                }
-                else if (currentTurn >= SUBHOTTURN) // Turn 5-9: Chỉ có x2 với 20%
-                {
-                    float roll = UnityEngine.Random.Range(0f, 100f);
-                    
-                    if (roll < 20f)
-                    {
-                        dotComponent.multiplier = 2;
-                        CreateMultiplierText(piece, 2);
-                    }
-                }
-                // Turn 1-4: Không có multiplier
             }
         }
     }
-}
     /// <summary>
     /// Tạo text hiển thị multiplier trên viên
     /// </summary>
@@ -1073,8 +1071,6 @@ public class Board : MonoBehaviour
         Dot dotComponent = dot.GetComponent<Dot>();
         dotComponent.multiplierText = text;
 
-        Debug.Log($"[MULTIPLIER] Created x{multiplier} at ({dotComponent.column},{dotComponent.row})");
-        Debug.Log($"[MULTIPLIER] Scale: {textObj.transform.localScale}, Size: {textRect.sizeDelta}, Pos: {textRect.localPosition}");
     }
 
     private bool MatchesOnBoard()
@@ -1100,10 +1096,35 @@ public class Board : MonoBehaviour
         RefillBoard();
         yield return new WaitForSeconds(.1f);
 
-        while (MatchesOnBoard())
+        // ✅ BẮT BUỘC: Tìm matches sau khi refill
+        if (findMaches != null)
         {
-            yield return new WaitForSeconds(.1f);
+            findMaches.FindAllMatches();
+        }
+
+        yield return new WaitForSeconds(.1f);
+
+        // ✅ THÊM COUNTER để tránh infinite loop
+        int safetyCounter = 0;
+        int maxIterations = 10;
+
+        while (MatchesOnBoard() && safetyCounter < maxIterations)
+        {
+
             DestroyMatches();
+            yield return new WaitForSeconds(.5f); // ✅ Đợi phá hủy xong
+
+            // ✅ Tìm matches mới sau mỗi lần phá hủy
+            if (findMaches != null)
+            {
+                findMaches.FindAllMatches();
+            }
+
+            safetyCounter++;
+        }
+
+        if (safetyCounter >= maxIterations)
+        {
         }
 
         yield return new WaitForSeconds(.3f);
@@ -1161,7 +1182,6 @@ public class Board : MonoBehaviour
         foreach (var kvp in sortedCounts)
         {
             // ✅ LOG ĐỂ KIỂM TRA
-            Debug.Log($"[DESTROY] {kvp.Key}: {kvp.Value} (with multipliers)");
 
             GameObject entry = Instantiate(destructionEntryPrefab, destructionCountPanel.transform);
             entry.name = kvp.Key;
@@ -1183,7 +1203,6 @@ public class Board : MonoBehaviour
     {
         if (active == null)
         {
-            Debug.LogError("[BOARD] Active object not found");
             yield break;
         }
 
@@ -1236,7 +1255,6 @@ public class Board : MonoBehaviour
 
         if (hasAnyHeal)
         {
-            Debug.Log("[HEAL] Starting heal animation block");
 
             // 🎬 BẮT ĐẦU ANIMATION HEAL
             StartCoroutine(active.SetAnimationForItem("xanh Dot"));
@@ -1261,14 +1279,12 @@ public class Board : MonoBehaviour
                 active.bossPetAnimator.SetInteger("key", 0);
 
             yield return new WaitForSeconds(0.2f); // ⭐ Đợi animator về idle hoàn toàn
-            Debug.Log("[HEAL] Heal animation block completed");
         }
 
         // ===== 5) DAMAGE (KIẾM VÀNG) BLOCK =====
         if (itemCounts.ContainsKey("vang Dot"))
         {
             int countKiem = itemCounts["vang Dot"];
-            Debug.Log($"[DAMAGE] Starting damage animation - {countKiem} swords");
 
             // ⏱️ DELAY QUAN TRỌNG: Đảm bảo animator đã reset xong
             yield return new WaitForSeconds(0.3f);
@@ -1291,7 +1307,6 @@ public class Board : MonoBehaviour
 
             active.UpdateSlider();
             yield return new WaitForSeconds(0.2f);
-            Debug.Log("[DAMAGE] Damage animation completed");
         }
 
         // ===== 6) FADE OUT UI ITEMS =====
@@ -1397,15 +1412,11 @@ public class Board : MonoBehaviour
     {
         if (isGameOver)
         {
-            Debug.LogWarning("[RESULT] Already showing result, skipping...");
             yield break;
         }
 
         isGameOver = true;
         int turnCount = active != null ? active.TurnNumber : 0;
-
-        Debug.Log($"[RESULT] Player {(playerWon ? "WON" : "LOST")} in {turnCount} turns");
-        Debug.Log($"[RESULT] Is Boss Battle: {isBossBattle}");
 
         panelResult.SetActive(true);
 
@@ -1458,11 +1469,9 @@ public class Board : MonoBehaviour
                 petData,
                 onSuccess: (resp) =>
                 {
-                    Debug.Log("[API] count pass OK: " + resp);
                 },
                 onError: (err) =>
                 {
-                    Debug.LogError("[API] count pass: " + err);
                 }
             );
 
@@ -1534,7 +1543,6 @@ public class Board : MonoBehaviour
             btnGet.gameObject.SetActive(true);
         }
 
-        Debug.Log("[RESULT] Result sequence completed!");
     }
     // ==================== BOSS DAMAGE SUBMISSION ====================
 
@@ -1550,7 +1558,6 @@ public class Board : MonoBehaviour
             totalDamage = ManagerMatch.Instance.GetTotalBossDamage();
         }
 
-        Debug.Log($"[BOSS] Submitting damage: {totalDamage}, Victory: {playerWon}, Turns: {turnCount}");
 
         // Tạo DTO
         BossBattleResultDTO resultData = new BossBattleResultDTO
@@ -1568,11 +1575,9 @@ public class Board : MonoBehaviour
             resultData,
             (response) =>
             {
-                Debug.Log($"[BOSS] ✓ Damage submitted: {response}");
             },
             (error) =>
             {
-                Debug.LogError($"[BOSS] ✗ Submit failed: {error}");
             }
         );
     }
@@ -1586,7 +1591,6 @@ public class Board : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        Debug.Log("[Board] Returning from PvP battle");
 
         // ✅ GIỮ NGUYÊN FLAG để khôi phục state
         // KHÔNG xóa ReturnToRoom, ReturnToChinhPhuc, ReturnToPanelIndex
@@ -1597,7 +1601,6 @@ public class Board : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[Board] ManagerGame not found, loading QuangTruong as fallback");
             UnityEngine.SceneManagement.SceneManager.LoadScene("QuangTruong");
         }
     }
@@ -1616,7 +1619,6 @@ public class Board : MonoBehaviour
 
         PlayerPrefs.Save();
 
-        Debug.Log("[Board] Returning to QuangTruong from Boss Battle");
 
         UnityEngine.SceneManagement.SceneManager.LoadScene("QuangTruong");
     }
@@ -1652,7 +1654,6 @@ public class Board : MonoBehaviour
                 quantity = loseStones
             });
 
-            Debug.Log($"[REWARD] Defeat: {loseStones}x Lv1 {enemyPetElement} stones");
             return reward;
         }
 
@@ -1670,16 +1671,13 @@ public class Board : MonoBehaviour
             if (luckyChance < 5f) // 5% chance
             {
                 reward.bonusGold = UnityEngine.Random.Range(1000, 5001); // 1000-5000
-                Debug.Log($"[REWARD] 🍀 LUCKY! (Pet Lv{enemyPetLevel}): Bonus Gold {reward.bonusGold}");
             }
             else
             {
-                Debug.Log($"[REWARD] No luck this time (Pet Lv{enemyPetLevel}, roll: {luckyChance:F1})");
             }
         }
         else
         {
-            Debug.Log($"[REWARD] Pet level {enemyPetLevel} < 60, no gold bonus chance");
         }
 
         // ✅ BOSS BATTLE: Luôn cho đá theo hệ boss
@@ -1690,7 +1688,6 @@ public class Board : MonoBehaviour
             int totalStones = CalculateTotalStones(turnCount);
             DistributeStones(reward, totalStones, turnCount);
 
-            Debug.Log($"[REWARD] Boss Victory: {totalStones} {enemyPetElement} stones");
             return reward;
         }
 
@@ -1698,7 +1695,6 @@ public class Board : MonoBehaviour
         if (currentCount == requestPass)
         {
             reward.receivedPet = true;
-            Debug.Log($"[REWARD] PvP Victory: Received Enemy Pet! ({enemyPetElement}, ID: {enemyPetId})");
             return reward;
         }
 
@@ -1706,7 +1702,6 @@ public class Board : MonoBehaviour
         int pvpStones = CalculateTotalStones(turnCount);
         DistributeStones(reward, pvpStones, turnCount);
 
-        Debug.Log($"[REWARD] PvP Victory: {pvpStones} {enemyPetElement} stones");
         return reward;
     }
 
@@ -1724,7 +1719,6 @@ public class Board : MonoBehaviour
     {
         Dictionary<(string element, int level), int> stoneCounts = new Dictionary<(string, int), int>();
 
-        Debug.Log($"[REWARD] Turn: {turnCount}, Total: {totalStones} stones");
 
         for (int i = 0; i < totalStones; i++)
         {
@@ -1750,7 +1744,6 @@ public class Board : MonoBehaviour
                 element = kvp.Key.element,
                 quantity = kvp.Value
             });
-            Debug.Log($"[REWARD] {kvp.Key.element} Lv{kvp.Key.level}: {kvp.Value} stones");
         }
     }
 
@@ -1831,7 +1824,6 @@ public class Board : MonoBehaviour
     {
         if (listReward == null)
         {
-            Debug.LogWarning("[REWARD] ListReward not assigned!");
             yield break;
         }
 
@@ -1861,7 +1853,6 @@ public class Board : MonoBehaviour
         }
         else
         {
-            Debug.Log("[REWARD] No rewards to display");
         }
     }
 
@@ -1872,7 +1863,6 @@ public class Board : MonoBehaviour
     {
         if (itemRewardCT == null)
         {
-            Debug.LogWarning("[REWARD] ItemRewardCT prefab not assigned!");
             yield break;
         }
 
@@ -1906,7 +1896,6 @@ public class Board : MonoBehaviour
     {
         if (itemRewardPet == null)
         {
-            Debug.LogWarning("[REWARD] ItemRewardPet prefab not assigned!");
             yield break;
         }
         GameObject ctReward = Instantiate(itemRewardCT, listReward.transform);
@@ -1959,7 +1948,6 @@ public class Board : MonoBehaviour
     {
         if (itemRewardStone == null)
         {
-            Debug.LogWarning("[REWARD] ItemRewardStone prefab not assigned!");
             yield break;
         }
 
@@ -2073,7 +2061,6 @@ public class Board : MonoBehaviour
             expGain = 10;
         }
 
-        Debug.Log($"[REWARD] Calculated EXP gain: {expGain}");
 
         // ✅ GỬI BONUS GOLD (NẾU CÓ)
         if (reward.bonusGold > 0)
@@ -2085,11 +2072,9 @@ public class Board : MonoBehaviour
                 goldData,
                 onSuccess: (resp) =>
                 {
-                    Debug.Log($"[API] ✓ Bonus Gold added: +{reward.bonusGold} 🍀");
                 },
                 onError: (err) =>
                 {
-                    Debug.LogError("[API] Add bonus gold FAIL: " + err);
                 }
             );
         }
@@ -2111,11 +2096,9 @@ public class Board : MonoBehaviour
                 petData,
                 onSuccess: (resp) =>
                 {
-                    Debug.Log($"[API] ✓ Pet added: +{reward.requestAttack} CT, +{expGain} EXP");
                 },
                 onError: (err) =>
                 {
-                    Debug.LogError("[API] Add pet FAIL: " + err);
                 }
             );
         }
@@ -2138,11 +2121,9 @@ public class Board : MonoBehaviour
                 expData,
                 onSuccess: (resp) =>
                 {
-                    Debug.Log($"[API] ✓ EXP added: +{expGain}");
                 },
                 onError: (err) =>
                 {
-                    Debug.LogError("[API] Add EXP FAIL: " + err);
                 }
             );
 
@@ -2163,11 +2144,9 @@ public class Board : MonoBehaviour
                     stoneData,
                     onSuccess: (resp) =>
                     {
-                        Debug.Log($"[API] ✓ Stone added: {stone.element} Lv{stone.level} x{stone.quantity}");
                     },
                     onError: (err) =>
                     {
-                        Debug.LogError("[API] Add stone FAIL: " + err);
                     }
                 );
 
@@ -2179,12 +2158,10 @@ public class Board : MonoBehaviour
 
     void OnError(string error)
     {
-        Debug.LogError("API Error: " + error);
     }
 
     void OnSuccess(string message)
     {
-        Debug.Log("API Success: " + message);
     }
 
     // ==================== LEGACY RESULT (FALLBACK) ====================
@@ -2479,13 +2456,8 @@ public class Board : MonoBehaviour
 
             if (wrapper != null && wrapper.cards != null && wrapper.cards.Count > 0)
             {
-                Debug.Log($"[Board] Loading {wrapper.cards.Count} cards from PlayerPrefs");
                 LoadSelectedCards(wrapper.cards);
             }
-        }
-        else
-        {
-            Debug.LogWarning("[Board] No selected cards found in PlayerPrefs");
         }
     }
 
@@ -2494,20 +2466,11 @@ public class Board : MonoBehaviour
         // ✅ KIỂM TRA NULL TRƯỚC KHI TẠO
         if (cardData == null)
         {
-            Debug.LogError("[Board] CardData is null - cannot create legend card!");
             return;
         }
 
-        Debug.Log($"[Board] Creating legend card:");
-        Debug.Log($"  - Name: {cardData.name}");
-        Debug.Log($"  - ID: {cardData.cardId}");
-        Debug.Log($"  - ElementType: {cardData.elementTypeCard}");
-        Debug.Log($"  - Value: {cardData.value}");
-        Debug.Log($"  - Condition: {cardData.conditionUse}");
-
         if (cardContainer == null)
         {
-            Debug.LogError("[Board] CardContainer is null!");
             return;
         }
 
@@ -2515,7 +2478,6 @@ public class Board : MonoBehaviour
         Transform cardHT = cardContainer.Find("cardHT");
         if (cardHT == null)
         {
-            Debug.LogError("[Board] cardHT object not found in container!");
             return;
         }
 
@@ -2536,11 +2498,6 @@ public class Board : MonoBehaviour
                 if (cardSprite != null)
                 {
                     imgCard.sprite = cardSprite;
-                    Debug.Log($"[Board] ✓ Loaded sprite: {spritePath}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[Board] ⚠ Sprite not found: {spritePath}");
                 }
             }
         }
@@ -2561,7 +2518,6 @@ public class Board : MonoBehaviour
             cardsInHand.Add(cardObj);
         }
 
-        Debug.Log($"[Board] ✓ Created legend card: {cardData.name}");
     }
 
     /// <summary>
@@ -2572,13 +2528,7 @@ public class Board : MonoBehaviour
         // ✅ LỌC BỎ CARDS NULL TRƯỚC KHI XỬ LÝ
         var validCards = cards.Where(c => c != null).ToList();
 
-        if (validCards.Count < cards.Count)
-        {
-            Debug.LogWarning($"[Board] Filtered out {cards.Count - validCards.Count} null cards");
-        }
-
         selectedCards = new List<CardData>(validCards);
-        Debug.Log($"[Board] ✓ Received {selectedCards.Count} valid cards");
 
         // Hiển thị thẻ
         DisplayCardsOnBoard();
@@ -2599,7 +2549,6 @@ public class Board : MonoBehaviour
             CreateCard(selectedCards[i], i, cardsToDisplay);
         }
 
-        Debug.Log($"[Board] ✓ Displayed {cardsToDisplay} normal cards");
     }
 
     /// <summary>
@@ -2610,13 +2559,11 @@ public class Board : MonoBehaviour
         // ✅ KIỂM TRA NULL TRƯỚC KHI TẠO
         if (cardData == null)
         {
-            Debug.LogError("[Board] Cannot create card - CardData is null!");
             return;
         }
 
         if (cardPrefab == null || cardContainer == null)
         {
-            Debug.LogError("[Board] CardPrefab or CardContainer is null!");
             return;
         }
 
@@ -2635,11 +2582,9 @@ public class Board : MonoBehaviour
                 if (cardSprite != null)
                 {
                     imgCard.sprite = cardSprite;
-                    Debug.Log($"[Board] ✓ Loaded sprite: card{cardData.cardId}");
                 }
                 else
                 {
-                    Debug.LogWarning($"[Board] ⚠ Sprite not found: Image/Card/card{cardData.cardId}");
                 }
             }
         }
@@ -2687,7 +2632,6 @@ public class Board : MonoBehaviour
             Destroy(card);
         }
 
-        Debug.Log($"[Board] ✓ Cleared {cardsToRemove.Count} normal cards (kept cardHT)");
     }
 
     /// <summary>
@@ -2697,11 +2641,9 @@ public class Board : MonoBehaviour
     {
         if (!cardsInHand.Contains(cardObj))
         {
-            Debug.LogWarning("[Board] Card not in hand!");
             return;
         }
 
-        Debug.Log("[Board] Using card...");
 
         // Animation bay ra
         RectTransform rt = cardObj.GetComponent<RectTransform>();
@@ -2746,7 +2688,6 @@ public class Board : MonoBehaviour
             }
         }
 
-        Debug.Log($"[Board] ✓ Rearranged - {cardsInHand.Count} cards remaining");
     }
 
     /// <summary>
@@ -2779,7 +2720,6 @@ public class Board : MonoBehaviour
 
         if (tagsToDestroy.Count == 0)
         {
-            Debug.LogWarning("[Board] No colors selected!");
             currentState = GameState.move;
             yield break;
         }
@@ -2799,13 +2739,11 @@ public class Board : MonoBehaviour
 
         if (candidates.Count == 0)
         {
-            Debug.LogWarning("[Board] No matching dots!");
             currentState = GameState.move;
             yield break;
         }
 
         int destroyAmount = Mathf.Min(count, candidates.Count);
-        Debug.Log($"[Board] Destroying {destroyAmount} dots");
 
         // ✅ ĐÁNH DẤU DOTS
         for (int i = 0; i < destroyAmount; i++)
@@ -2840,11 +2778,9 @@ public class Board : MonoBehaviour
 
         if (currentState != GameState.move)
         {
-            Debug.LogWarning("[Board] Pipeline timeout! Forcing to move state.");
             currentState = GameState.move;
         }
 
-        Debug.Log("[Board] Destroy pipeline completed");
     }
     /// <summary>
     /// ✅ KIỂM TRA NĂNG LƯỢNG SAU MỖI TURN
@@ -2855,12 +2791,10 @@ public class Board : MonoBehaviour
 
         int currentEnergy = int.Parse(ManagerMatch.Instance.txtNLUser.text);
 
-        Debug.Log($"[ENERGY] Current energy: {currentEnergy}");
 
         // ✅ NẾU HẾT NĂNG LƯỢNG (0)
         if (currentEnergy <= 0)
         {
-            Debug.LogWarning("[ENERGY] Out of energy! Returning to QuangTruong...");
             StartCoroutine(ShowEnergyWarningAndReturn("Bạn đã hết năng lượng!", true));
             return false;
         }
@@ -2869,7 +2803,6 @@ public class Board : MonoBehaviour
         if (currentEnergy < 5 && currentEnergy != lastCheckedEnergy)
         {
             lastCheckedEnergy = currentEnergy;
-            Debug.LogWarning($"[ENERGY] Low energy warning: {currentEnergy}/5");
             StartCoroutine(ShowEnergyWarningAndReturn($"Năng lượng sắp hết!\nCòn lại: {currentEnergy}", false));
             return true; // Vẫn cho phép chơi tiếp
         }
@@ -2883,7 +2816,6 @@ public class Board : MonoBehaviour
     {
         if (energyWarningPanel == null)
         {
-            Debug.LogWarning("[ENERGY] Warning panel not assigned!");
 
             if (forceReturn)
             {
@@ -2982,7 +2914,6 @@ public class Board : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        Debug.Log("[ENERGY] Returning to QuangTruong - Out of energy");
 
         // ✅ XÓA FLAGS NẾU CẦN
         if (isBossBattle)

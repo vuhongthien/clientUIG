@@ -65,7 +65,6 @@ public class Dot : MonoBehaviourPun
 
         if (boardPVP == null)
         {
-            Debug.LogError("BoardPVP không tìm thấy! Đảm bảo bạn đang ở scene PVP.");
         }
     }
 
@@ -77,7 +76,6 @@ public class Dot : MonoBehaviourPun
 
         if (board == null)
         {
-            Debug.LogError("Board không tìm thấy! Đảm bảo bạn đang ở scene Single Player.");
         }
     }
 

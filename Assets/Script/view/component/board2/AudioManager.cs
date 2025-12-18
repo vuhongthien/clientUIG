@@ -45,6 +45,17 @@ public class AudioManager : MonoBehaviour
     private void Start()
     {
         PlayRandomBackgroundMusic();
+        LoadAudioSettings();
+    }
+
+    void LoadAudioSettings()
+    {
+        AudioSettings settings = AudioSettingsManager.GetSavedSettings();
+
+        SetBGMVolume(settings.bgmVolume * settings.masterVolume);
+        SetSFXVolume(settings.sfxVolume * settings.masterVolume);
+
+        Debug.Log($"[AudioManager] Settings loaded: BGM={settings.bgmVolume}, SFX={settings.sfxVolume}");
     }
 
     void SetupAudioSources()
@@ -65,7 +76,7 @@ public class AudioManager : MonoBehaviour
     }
 
     // ==================== BACKGROUND MUSIC ====================
-    
+
     /// <summary>
     /// ✅ RANDOM 1 TRONG 6 TRACK
     /// </summary>
@@ -133,7 +144,7 @@ public class AudioManager : MonoBehaviour
     public void PlayMatchSound(string dotTag)
     {
         int index = GetSoundIndexFromTag(dotTag);
-        
+
         if (index >= 0 && index < matchSounds.Length && matchSounds[index] != null)
         {
             sfxSource.PlayOneShot(matchSounds[index], sfxVolume);
@@ -147,12 +158,12 @@ public class AudioManager : MonoBehaviour
     {
         switch (tag)
         {
-            case "xanh Dot":      return 0; // Xanh lá
+            case "xanh Dot": return 0; // Xanh lá
             case "xanhduong Dot": return 1; // Xanh dương
-            case "do Dot":        return 2; // Đỏ
-            case "tim Dot":       return 3; // Tím
-            case "trang Dot":     return 4; // Trắng
-            case "vang Dot":      return 5; // Vàng (kim cương)
+            case "do Dot": return 2; // Đỏ
+            case "tim Dot": return 3; // Tím
+            case "trang Dot": return 4; // Trắng
+            case "vang Dot": return 5; // Vàng (kim cương)
             default:
                 Debug.LogWarning($"[AudioManager] Unknown dot tag: {tag}");
                 return -1;
@@ -176,15 +187,15 @@ public class AudioManager : MonoBehaviour
     public void PlayMatchSoundWithCombo(string dotTag, int comboCount)
     {
         int index = GetSoundIndexFromTag(dotTag);
-        
+
         if (index >= 0 && index < matchSounds.Length && matchSounds[index] != null)
         {
             // Tăng pitch theo combo (tối đa 1.5x)
             float pitch = 1f + Mathf.Min(comboCount * comboPitchIncrement, 0.5f);
-            
+
             sfxSource.pitch = pitch;
             sfxSource.PlayOneShot(matchSounds[index], sfxVolume);
-            
+
             // Reset pitch sau 0.2s
             StartCoroutine(ResetPitchAfterDelay(0.2f));
         }

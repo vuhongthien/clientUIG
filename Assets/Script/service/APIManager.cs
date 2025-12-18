@@ -23,28 +23,23 @@ public class APIManager : MonoBehaviour
 
     public IEnumerator GetRequest<T>(string url, Action<T> onSuccess, Action<string> onError)
     {
-        Debug.Log($"[APIManager] → GET Request: {url}");
 
         using (UnityWebRequest request = UnityWebRequest.Get(url))
         {
             request.SetRequestHeader("Content-Type", "application/json");
             yield return request.SendWebRequest();
 
-            Debug.Log($"[APIManager] Response Code: {request.responseCode}");
-            Debug.Log($"[APIManager] Result: {request.result}");
 
             if (request.result == UnityWebRequest.Result.Success)
             {
                 try
                 {
                     string rawResponse = request.downloadHandler.text;
-                    Debug.Log($"[APIManager] ✓ Raw Response: {rawResponse}");
 
                     // Kiểm tra response có rỗng không
                     if (string.IsNullOrEmpty(rawResponse))
                     {
                         string error = "Empty response from server";
-                        Debug.LogError($"[APIManager] ❌ {error}");
                         onError?.Invoke(error);
                         yield break;
                     }
@@ -57,7 +52,6 @@ public class APIManager : MonoBehaviour
                     {
                         // Nếu là array, wrap thành object
                         jsonResponse = "{\"data\":" + rawResponse + "}";
-                        Debug.Log($"[APIManager] Array detected, wrapped: {jsonResponse}");
                     }
                     else if (rawResponse.TrimStart().StartsWith("{"))
                     {
@@ -66,32 +60,27 @@ public class APIManager : MonoBehaviour
                         {
                             // Đã có data field, dùng luôn
                             jsonResponse = rawResponse;
-                            Debug.Log($"[APIManager] Object with 'data' field detected");
                         }
                         else
                         {
                             // Chưa có data field, wrap lại
                             jsonResponse = "{\"data\":" + rawResponse + "}";
-                            Debug.Log($"[APIManager] Object without 'data' field, wrapped");
                         }
                     }
                     else
                     {
                         // Không phải JSON hợp lệ
                         string error = $"Invalid JSON format: {rawResponse}";
-                        Debug.LogError($"[APIManager] ❌ {error}");
                         onError?.Invoke(error);
                         yield break;
                     }
 
-                    Debug.Log($"[APIManager] Parsing: {jsonResponse}");
 
                     ResponseWrapper<T> wrappedResponse = JsonUtility.FromJson<ResponseWrapper<T>>(jsonResponse);
 
                     if (wrappedResponse == null)
                     {
                         string error = "Failed to parse ResponseWrapper";
-                        Debug.LogError($"[APIManager] ❌ {error}");
                         onError?.Invoke(error);
                         yield break;
                     }
@@ -99,19 +88,15 @@ public class APIManager : MonoBehaviour
                     if (wrappedResponse.data == null)
                     {
                         string error = "Response data is null after parsing";
-                        Debug.LogError($"[APIManager] ❌ {error}");
                         onError?.Invoke(error);
                         yield break;
                     }
 
-                    Debug.Log($"[APIManager] ✓✓ Parse SUCCESS! Type: {typeof(T).Name}");
                     onSuccess?.Invoke(wrappedResponse.data);
                 }
                 catch (Exception e)
                 {
                     string error = $"JSON Parse Error: {e.Message}\nStackTrace: {e.StackTrace}";
-                    Debug.LogError($"[APIManager] ❌ Exception: {error}");
-                    Debug.LogError($"[APIManager] Raw response was: {request.downloadHandler.text}");
                     onError?.Invoke(error);
                 }
             }
@@ -125,7 +110,6 @@ public class APIManager : MonoBehaviour
                     error += $"\nResponse: {responseText}";
                 }
 
-                Debug.LogError($"[APIManager] ❌ {error}");
                 onError?.Invoke(error);
             }
         }
@@ -139,8 +123,6 @@ public class APIManager : MonoBehaviour
             jsonData = JsonUtility.ToJson(data);
         }
 
-        Debug.Log($"[API POST RAW] URL: {url}");
-        Debug.Log($"[API POST RAW] Data: {jsonData}");
 
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
         {
@@ -158,14 +140,11 @@ public class APIManager : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 string responseText = request.downloadHandler.text;
-                Debug.Log($"[API POST RAW] Success: {responseText}");
                 onSuccess?.Invoke(responseText);
             }
             else
             {
                 string error = request.error;
-                Debug.LogError($"[API POST RAW] Error: {error}");
-                Debug.LogError($"[API POST RAW] Response: {request.downloadHandler.text}");
                 onError?.Invoke(request.downloadHandler.text);
 
             }
@@ -178,9 +157,6 @@ public class APIManager : MonoBehaviour
         byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
 
         // ✅ LOG REQUEST
-        Debug.Log($"[APIManager] 📤 POST Request:");
-        Debug.Log($"[APIManager]    URL: {url}");
-        Debug.Log($"[APIManager]    Payload: {jsonData}");
 
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
         {
@@ -191,16 +167,12 @@ public class APIManager : MonoBehaviour
             yield return request.SendWebRequest();
 
             // ✅ LOG RESPONSE
-            Debug.Log($"[APIManager] 📥 POST Response:");
-            Debug.Log($"[APIManager]    Status Code: {request.responseCode}");
-            Debug.Log($"[APIManager]    Result: {request.result}");
 
             if (request.result == UnityWebRequest.Result.Success)
             {
                 try
                 {
                     string rawResponse = request.downloadHandler.text;
-                    Debug.Log($"[APIManager]    Raw Response: {rawResponse}");
 
                     // Handle string response directly
                     if (typeof(T) == typeof(string))
@@ -213,14 +185,11 @@ public class APIManager : MonoBehaviour
                     string jsonResponse = "{\"data\":" + rawResponse + "}";
                     ResponseWrapper<T> wrappedResponse = JsonUtility.FromJson<ResponseWrapper<T>>(jsonResponse);
 
-                    Debug.Log($"[APIManager] ✓ POST Success!");
                     onSuccess?.Invoke(wrappedResponse.data);
                 }
                 catch (Exception e)
                 {
                     string error = $"JSON Parse Error: {e.Message}";
-                    Debug.LogError($"[APIManager] ❌ {error}");
-                    Debug.LogError($"[APIManager]    Raw response: {request.downloadHandler.text}");
                     onError?.Invoke(error);
                 }
             }
@@ -234,7 +203,6 @@ public class APIManager : MonoBehaviour
                     error += $"\nResponse Body: {responseBody}";
                 }
 
-                Debug.LogError($"[APIManager] ❌ {error}");
                 onError?.Invoke(error);
             }
         }

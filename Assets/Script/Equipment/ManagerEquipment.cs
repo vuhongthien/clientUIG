@@ -83,11 +83,22 @@ public class ManagerEquipment : MonoBehaviour
 
     private CanvasGroup panelCanvasGroup;
     private Dictionary<int, Sprite> stoneDictionary;
+    public GameObject panelSettings;
+
+    public Button btnOpenSettings; // ✅ THÊM
+
+    private SettingsManager settingsManager;
 
     void Start()
     {
         userId = PlayerPrefs.GetInt("userId", 0);
-
+settingsManager = FindObjectOfType<SettingsManager>();
+        if (settingsManager == null && panelSettings != null)
+        {
+            GameObject settingsObj = new GameObject("SettingsManager");
+            settingsManager = settingsObj.AddComponent<SettingsManager>();
+            settingsManager.panelSettings = panelSettings;
+        }
         if (userId == 0)
         {
             Debug.LogError("[ManagerEquipment] User ID not found!");
@@ -132,6 +143,10 @@ public class ManagerEquipment : MonoBehaviour
         if (bgPet != null) bgPet.SetActive(false);
         if (ListAvt != null) ListAvt.SetActive(false);
         if (panelUserInfo != null) panelUserInfo.SetActive(false); // ✅ Ẩn panel user info
+        if (btnOpenSettings != null && settingsManager != null)
+        {
+            btnOpenSettings.onClick.AddListener(() => settingsManager.OpenSettings());
+        }
     }
 
     // ============================================================
@@ -952,6 +967,7 @@ public class ManagerEquipment : MonoBehaviour
     void OnSelectAvatar(AvatarEquipmentDTO avatar, GameObject avtObj)
     {
         ManagerQuangTruong.Instance.imgAvatar.sprite = Resources.Load<Sprite>($"Image/Avt/{avatar.avatarId}");
+        imgUserInfoAvatar.sprite = Resources.Load<Sprite>($"Image/Avt/{avatar.avatarId}");
         Debug.Log($"[ManagerEquipment] Selecting avatar: {avatar.name} (ID: {avatar.avatarId})");
         StartCoroutine(EquipAvatarCoroutine(avatar, avtObj));
     }

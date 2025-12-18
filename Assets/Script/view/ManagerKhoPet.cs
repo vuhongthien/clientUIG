@@ -190,9 +190,16 @@ public class ManagerKhoPet : MonoBehaviour
                 messageTextStone.gameObject.SetActive(false);
             }
         }
+         LoadAudioSettings();
     }
 
+    void LoadAudioSettings()
+{
+    AudioSettings settings = AudioSettingsManager.GetSavedSettings();
+    SetBGMVolume(settings.bgmVolume * settings.masterVolume);
     
+    Debug.Log($"[KhoPet] Audio settings loaded: BGM={settings.bgmVolume}");
+}
 
     /// <summary>
     /// Play background music

@@ -60,6 +60,8 @@ public class ManagerTop : MonoBehaviour
     private Dictionary<int, Sprite> stoneDictionary;
     private CanvasGroup panelXepHangCanvasGroup;
     private CanvasGroup panelDetailCanvasGroup;
+    [Header("Loading")]
+    public GameObject loadingIndicator;
 
     void Start()
     {
@@ -80,6 +82,23 @@ public class ManagerTop : MonoBehaviour
         PanelXepHang.SetActive(false);
         if (panelDetailTop != null)
             panelDetailTop.SetActive(false);
+    }
+
+    void ShowLoadingIndicator()
+    {
+        if (loadingIndicator != null)
+        {
+            loadingIndicator.SetActive(true);
+        }
+    }
+
+    void HideLoadingIndicator()
+    {
+        if (loadingIndicator != null)
+        {
+            LeanTween.cancel(loadingIndicator);
+            loadingIndicator.SetActive(false);
+        }
     }
 
     void SetupCanvasGroups()
@@ -204,28 +223,71 @@ public class ManagerTop : MonoBehaviour
 
     void OnTopButtonClicked()
     {
-        // Animation mở panel
-        PanelXepHang.SetActive(true);
-        AnimateOpenPanel(PanelXepHang, panelXepHangCanvasGroup);
-        
+        // ✅ HIỆN LOADING NGAY
+        ShowLoadingIndicator();
+
         // Scale animation cho button
         LeanTween.scale(btnTop.gameObject, Vector3.one * 0.9f, 0.1f)
             .setEaseInOutQuad()
-            .setOnComplete(() => {
+            .setOnComplete(() =>
+            {
                 LeanTween.scale(btnTop.gameObject, Vector3.one, 0.1f).setEaseInOutQuad();
             });
 
-        LoadTop9Ranking();
+        // ✅ LOAD DATA TRƯỚC, SAU ĐÓ MỚI MỞ PANEL
+        StartCoroutine(LoadDataThenOpenPanel());
     }
+    IEnumerator LoadDataThenOpenPanel()
+    {
+        // ✅ BƯỚC 1: LOAD DATA TRƯỚC
+        bool dataLoaded = false;
+        List<TopRankingData> rankings = null;
 
+        yield return StartCoroutine(APIManager.Instance.GetRequest<List<TopRankingData>>(
+            APIConfig.GET_TOP9_RANKING,
+            onSuccess: (data) =>
+            {
+                rankings = data;
+                dataLoaded = true;
+                Debug.Log($"[ManagerTop] ✓ Loaded {data.Count} rankings");
+            },
+            onError: (error) =>
+            {
+                dataLoaded = true;
+                Debug.LogError($"[ManagerTop] ✗ API Error: {error}");
+            }
+        ));
+
+        // ✅ BƯỚC 2: ẨN LOADING
+        HideLoadingIndicator();
+
+        // ✅ BƯỚC 3: NẾU CÓ DATA → MỞ PANEL VÀ HIỂN THỊ
+        if (rankings != null && rankings.Count > 0)
+        {
+            currentRankings = rankings;
+
+            // Mở panel với animation
+            PanelXepHang.SetActive(true);
+            AnimateOpenPanel(PanelXepHang, panelXepHangCanvasGroup);
+
+            // Hiển thị data ngay (không cần delay vì đã có sẵn)
+            DisplayRankings(rankings);
+        }
+        else
+        {
+            Debug.LogError("[ManagerTop] Không có dữ liệu để hiển thị!");
+            // Optional: Hiện thông báo lỗi cho user
+        }
+    }
     void OnCloseRankingClicked()
     {
         AnimateClosePanel(PanelXepHang, panelXepHangCanvasGroup);
-        
+
         // Scale animation cho button
         LeanTween.scale(btnBack.gameObject, Vector3.one * 0.9f, 0.1f)
             .setEaseInOutQuad()
-            .setOnComplete(() => {
+            .setOnComplete(() =>
+            {
                 LeanTween.scale(btnBack.gameObject, Vector3.one, 0.1f).setEaseInOutQuad();
             });
     }
@@ -235,11 +297,12 @@ public class ManagerTop : MonoBehaviour
         if (panelDetailTop != null)
         {
             AnimateClosePanel(panelDetailTop, panelDetailCanvasGroup);
-            
+
             // Scale animation cho button
             LeanTween.scale(btnCloseDetail.gameObject, Vector3.one * 0.9f, 0.1f)
                 .setEaseInOutQuad()
-                .setOnComplete(() => {
+                .setOnComplete(() =>
+                {
                     LeanTween.scale(btnCloseDetail.gameObject, Vector3.one, 0.1f).setEaseInOutQuad();
                 });
         }
@@ -271,33 +334,12 @@ public class ManagerTop : MonoBehaviour
         // Fade animation
         LeanTween.alphaCanvas(canvasGroup, 0f, panelAnimDuration)
             .setEase(LeanTweenType.easeInOutQuad)
-            .setOnComplete(() => {
+            .setOnComplete(() =>
+            {
                 panel.SetActive(false);
             });
     }
 
-    void LoadTop9Ranking()
-    {
-        StartCoroutine(FetchTop9Ranking());
-    }
-
-    IEnumerator FetchTop9Ranking()
-    {
-        string url = APIConfig.GET_TOP9_RANKING;
-
-        yield return StartCoroutine(APIManager.Instance.GetRequest<List<TopRankingData>>(
-            url,
-            onSuccess: (rankings) =>
-            {
-                currentRankings = rankings;
-                DisplayRankings(rankings);
-            },
-            onError: (error) =>
-            {
-                Debug.LogError("Failed to load rankings: " + error);
-            }
-        ));
-    }
 
     void DisplayRankings(List<TopRankingData> rankings)
     {
@@ -326,7 +368,7 @@ public class ManagerTop : MonoBehaviour
     {
         // Reset
         item.transform.localScale = Vector3.zero;
-        
+
         CanvasGroup canvasGroup = item.GetComponent<CanvasGroup>();
         if (canvasGroup == null)
             canvasGroup = item.AddComponent<CanvasGroup>();
@@ -392,15 +434,17 @@ public class ManagerTop : MonoBehaviour
         if (btnUserItem != null)
         {
             btnUserItem.onClick.RemoveAllListeners();
-            btnUserItem.onClick.AddListener(() => {
+            btnUserItem.onClick.AddListener(() =>
+            {
                 // Scale animation khi click
                 LeanTween.scale(userT.gameObject, Vector3.one * 1.1f, 0.1f)
                     .setEaseInOutQuad()
-                    .setOnComplete(() => {
+                    .setOnComplete(() =>
+                    {
                         LeanTween.scale(userT.gameObject, Vector3.one, 0.1f)
                             .setEaseInOutQuad();
                     });
-                
+
                 OnUserItemClicked(ranking.userId);
             });
         }
@@ -540,7 +584,7 @@ public class ManagerTop : MonoBehaviour
         LeanTween.scale(imgObj, Vector3.one, 0.4f)
             .setDelay(delay)
             .setEase(LeanTweenType.easeOutBack);
-        
+
         // Thêm rotation nhẹ
         imgObj.transform.rotation = Quaternion.Euler(0, 0, 10f);
         LeanTween.rotateZ(imgObj, 0f, 0.4f)
@@ -559,69 +603,70 @@ public class ManagerTop : MonoBehaviour
         // Counter animation
         LeanTween.value(textComponent.gameObject, fromValue, toValue, duration)
             .setDelay(delay + 0.2f)
-            .setOnUpdate((float val) => {
+            .setOnUpdate((float val) =>
+            {
                 textComponent.text = Mathf.RoundToInt(val).ToString();
             })
             .setEase(LeanTweenType.easeOutQuad);
     }
 
     void DisplayPetList(List<UserPetInfo> pets)
-{
-    if (petListContent == null) return;
-
-    // Xóa các item cũ
-    foreach (Transform child in petListContent)
     {
-        Destroy(child.gameObject);
-    }
+        if (petListContent == null) return;
 
-    // Tạo item mới cho mỗi pet
-    if (petItemPrefab != null)
-    {
-        for (int i = 0; i < pets.Count; i++)
+        // Xóa các item cũ
+        foreach (Transform child in petListContent)
         {
-            GameObject item = Instantiate(petItemPrefab, petListContent);
-            SetupPetItem(item, pets[i]);
-            
-            // Đợi 1 frame để Layout tính toán
-            StartCoroutine(DelayedAnimatePetItem(item, i));
+            Destroy(child.gameObject);
+        }
+
+        // Tạo item mới cho mỗi pet
+        if (petItemPrefab != null)
+        {
+            for (int i = 0; i < pets.Count; i++)
+            {
+                GameObject item = Instantiate(petItemPrefab, petListContent);
+                SetupPetItem(item, pets[i]);
+
+                // Đợi 1 frame để Layout tính toán
+                StartCoroutine(DelayedAnimatePetItem(item, i));
+            }
         }
     }
-}
 
-// Thêm coroutine để đợi Layout rebuild
-IEnumerator DelayedAnimatePetItem(GameObject item, int index)
-{
-    yield return null; // Đợi 1 frame
-    AnimatePetItem(item, index);
-}
+    // Thêm coroutine để đợi Layout rebuild
+    IEnumerator DelayedAnimatePetItem(GameObject item, int index)
+    {
+        yield return null; // Đợi 1 frame
+        AnimatePetItem(item, index);
+    }
 
     // Animation cho pet item
     // Animation cho pet item - FIX
-void AnimatePetItem(GameObject item, int index)
-{
-    // Để Layout tính toán trước
-    LayoutRebuilder.ForceRebuildLayoutImmediate(petListContent.GetComponent<RectTransform>());
-    
-    item.transform.localScale = Vector3.zero;
-    
-    float delay = 0.5f + (index * 0.05f);
-    
-    LeanTween.scale(item, Vector3.one, 0.3f)
-        .setDelay(delay)
-        .setEase(LeanTweenType.easeOutBack);
+    void AnimatePetItem(GameObject item, int index)
+    {
+        // Để Layout tính toán trước
+        LayoutRebuilder.ForceRebuildLayoutImmediate(petListContent.GetComponent<RectTransform>());
 
-    // KHÔNG DÙNG moveLocalX vì sẽ conflict với Layout!
-    // Chỉ dùng fade thay thế
-    CanvasGroup canvasGroup = item.GetComponent<CanvasGroup>();
-    if (canvasGroup == null)
-        canvasGroup = item.AddComponent<CanvasGroup>();
-    
-    canvasGroup.alpha = 0f;
-    LeanTween.alphaCanvas(canvasGroup, 1f, 0.3f)
-        .setDelay(delay)
-        .setEase(LeanTweenType.easeInOutQuad);
-}
+        item.transform.localScale = Vector3.zero;
+
+        float delay = 0.5f + (index * 0.05f);
+
+        LeanTween.scale(item, Vector3.one, 0.3f)
+            .setDelay(delay)
+            .setEase(LeanTweenType.easeOutBack);
+
+        // KHÔNG DÙNG moveLocalX vì sẽ conflict với Layout!
+        // Chỉ dùng fade thay thế
+        CanvasGroup canvasGroup = item.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = item.AddComponent<CanvasGroup>();
+
+        canvasGroup.alpha = 0f;
+        LeanTween.alphaCanvas(canvasGroup, 1f, 0.3f)
+            .setDelay(delay)
+            .setEase(LeanTweenType.easeInOutQuad);
+    }
 
     void SetupPetItem(GameObject item, UserPetInfo pet)
     {
@@ -681,9 +726,9 @@ void AnimatePetItem(GameObject item, int index)
     void AnimateStoneItem(GameObject item, int index)
     {
         item.transform.localScale = Vector3.zero;
-        
+
         float delay = 0.6f + (index * 0.04f);
-        
+
         LeanTween.scale(item, Vector3.one, 0.3f)
             .setDelay(delay)
             .setEase(LeanTweenType.easeOutBack);
@@ -692,7 +737,7 @@ void AnimatePetItem(GameObject item, int index)
         CanvasGroup canvasGroup = item.GetComponent<CanvasGroup>();
         if (canvasGroup == null)
             canvasGroup = item.AddComponent<CanvasGroup>();
-        
+
         canvasGroup.alpha = 0f;
         LeanTween.alphaCanvas(canvasGroup, 1f, 0.3f)
             .setDelay(delay)
@@ -823,10 +868,10 @@ void AnimatePetItem(GameObject item, int index)
     {
         // Cancel tất cả LeanTween animations khi destroy
         LeanTween.cancel(gameObject);
-        
+
         if (PanelXepHang != null)
             LeanTween.cancel(PanelXepHang);
-        
+
         if (panelDetailTop != null)
             LeanTween.cancel(panelDetailTop);
     }

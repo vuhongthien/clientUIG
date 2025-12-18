@@ -179,11 +179,20 @@ public class ManagerQuangTruong : MonoBehaviour
         {
             btnWheelDay.onClick.AddListener(OpenWheelDay);
         }
-
+LoadAudioSettings();
         StartCoroutine(LoadSceneAfterDelay());
     }
 
-
+/// <summary>
+/// ✅ Load và áp dụng audio settings từ PlayerPrefs
+/// </summary>
+void LoadAudioSettings()
+{
+    AudioSettings settings = AudioSettingsManager.GetSavedSettings();
+    SetBGMVolume(settings.bgmVolume * settings.masterVolume);
+    
+    Debug.Log($"[QuangTruong] Audio settings loaded: BGM={settings.bgmVolume}");
+}
 
 
     /// <summary>

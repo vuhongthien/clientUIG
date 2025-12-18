@@ -82,11 +82,9 @@ public class Card : MonoBehaviour
             active == null ||
             board.hasDestroyedThisTurn)
         {
-            Debug.Log("Không thể ấn card: " + gameObject.name);
             return;
         }
 
-        Debug.Log($"Player ấn card ID={idCard} ({GetCardTypeName()}) Level={lever}");
 
         // ✅ LẤY onAnimationCard từ CardFight và kích hoạt
         if (idCard == 4 && cardFight != null)
@@ -125,7 +123,6 @@ public class Card : MonoBehaviour
     // Coroutine để hiển thị items sau khi trì hoãn
     private IEnumerator ShowItemsAfterDelay(float delay)
     {
-        Debug.Log("Đang hiển thị onCard...");
 
         board.HideAllItems();
         listCard.onCard.SetActive(true);
@@ -134,7 +131,6 @@ public class Card : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         // Sau khi trì hoãn, ẩn onCard và hiển thị items
-        Debug.Log("Ẩn onCard và hiển thị items.");
         listCard.onCard.SetActive(false);
         board.ShowItems();
     }
@@ -190,7 +186,6 @@ public class Card : MonoBehaviour
             if (active != null)
             {
                 active.ResumeTurn(); // Tiếp tục đếm giờ turn
-                Debug.Log($"[CARD] Buff card {idCard} used. Turn continues.");
             }
 
             // Đặt lại trạng thái board
@@ -204,14 +199,12 @@ public class Card : MonoBehaviour
             // ✅ CARD KỸ NĂNG: Kết thúc turn ngay lập tức
             if (active != null)
             {
-                Debug.Log($"[CARD] Skill card {idCard} used. Ending turn {active.TurnNumber}.");
                 active.EndCurrentTurn(); // Kết thúc turn → chuyển sang NPC
             }
 
             // Board state sẽ được reset tự động bởi Active's OnTurnStart event
         }
 
-        Debug.Log($"[CARD] Card {idCard} processing completed.");
     }
 
 

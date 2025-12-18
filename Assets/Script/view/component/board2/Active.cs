@@ -201,7 +201,6 @@ public class Active : MonoBehaviour
     {
         if (isTurnInProgress)
         {
-            Debug.LogWarning("[ACTIVE] Game already started!");
             return;
         }
 
@@ -211,7 +210,6 @@ public class Active : MonoBehaviour
         // ✅ RESET STATIC FLAGS CỦA CARD
         CardUI.ResetAllCardsForNewMatch();
 
-        Debug.Log($"[ACTIVE] Game Started - Turn {turnNumber}");
         StartTurnInternal();
     }
 
@@ -219,14 +217,12 @@ public class Active : MonoBehaviour
     {
         if (isTurnInProgress)
         {
-            Debug.LogWarning("[ACTIVE] Turn already in progress!");
             return;
         }
 
         isTurnInProgress = true;
         currentTurnTime = turnDuration;
 
-        Debug.Log($"[ACTIVE] Turn {turnNumber} Started - {GetEntityName(currentTurnIndex)}");
 
         // Reset animation states
         if (IsPlayerTurn && playerPetAnimator != null)
@@ -259,7 +255,6 @@ public class Active : MonoBehaviour
         // Timeout
         if (isTurnInProgress)
         {
-            Debug.Log($"[ACTIVE] Turn {turnNumber} Timeout - {GetEntityName(currentTurnIndex)}");
 
             if (countdownText != null)
                 countdownText.text = "0";
@@ -274,7 +269,6 @@ public class Active : MonoBehaviour
     {
         if (!isTurnInProgress)
         {
-            Debug.LogWarning("[ACTIVE] No turn in progress to end!");
             return;
         }
 
@@ -287,7 +281,6 @@ public class Active : MonoBehaviour
 
         isTurnInProgress = false;
 
-        Debug.Log($"[ACTIVE] Turn {turnNumber} Ended - {GetEntityName(currentTurnIndex)}");
 
         // Trigger events
         OnTurnEndInternal?.Invoke(currentTurnIndex);
@@ -311,7 +304,6 @@ public class Active : MonoBehaviour
             turnNumber++;
         }
 
-        Debug.Log($"[ACTIVE] Transition: {GetEntityName(previousIndex)} → {GetEntityName(currentTurnIndex)}, Turn #{turnNumber}");
 
         // Bắt đầu turn mới
         StartTurnInternal();
@@ -326,7 +318,6 @@ public class Active : MonoBehaviour
             StopCoroutine(turnTimerCoroutine);
             turnTimerCoroutine = null;
         }
-        Debug.Log($"[ACTIVE] Turn Paused - {currentTurnTime}s remaining");
     }
 
     public void ResumeTurn()
@@ -338,19 +329,16 @@ public class Active : MonoBehaviour
             StopCoroutine(turnTimerCoroutine);
         }
         turnTimerCoroutine = StartCoroutine(TurnTimerCoroutine());
-        Debug.Log($"[ACTIVE] Turn Resumed - {currentTurnTime}s remaining");
     }
 
     public void AddTime(float seconds)
     {
         currentTurnTime += seconds;
-        Debug.Log($"[ACTIVE] Added {seconds}s, new time: {currentTurnTime}s");
     }
 
     public void SetTime(float seconds)
     {
         currentTurnTime = seconds;
-        Debug.Log($"[ACTIVE] Time set to {currentTurnTime}s");
     }
 
     public bool CanEntityAct(int entityIndex)
@@ -368,9 +356,6 @@ public class Active : MonoBehaviour
     private void HandleTurnStartInternal(int entityIndex)
     {
         // ✅ DEBUG: Log trạng thái giáp khi bắt đầu turn
-        Debug.Log($"[SHIELD DEBUG] === TURN {turnNumber} START ({GetEntityName(entityIndex)}) ===");
-        Debug.Log($"[SHIELD DEBUG] Player Shield: {GiapPlayer}, Active at Turn: {GiapPlayerActiveAtTurn}, Created at: {GiapPlayerCreatedAtTurn}");
-        Debug.Log($"[SHIELD DEBUG] NPC Shield: {GiapNPC}, Active at Turn: {GiapNPCActiveAtTurn}, Created at: {GiapNPCCreatedAtTurn}");
 
         // Notify Board nếu cần
         if (board != null)
@@ -386,12 +371,10 @@ public class Active : MonoBehaviour
     // Giữ lại để không break code cũ, nhưng redirect sang methods mới
     public void StartCountdown()
     {
-        Debug.Log("[ACTIVE] StartCountdown (legacy) - handled by internal timer");
     }
 
     public void StartCountdownNext()
     {
-        Debug.Log("[ACTIVE] StartCountdownNext (legacy) - handled by internal timer");
     }
 
     public void StopCountdown()
@@ -635,21 +618,16 @@ public class Active : MonoBehaviour
                         if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier = (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
-                            Debug.Log($"[WEAK] Player weak bonus: x{damageMultiplier}");
                         }
 
                         // Boss có Weak → Giảm damage của Player (vì Boss kháng)
                         if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier /= (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
-                            Debug.Log($"[RESIST] Boss resist: ÷{ManagerMatch.Instance.ePetsMatch.weaknessValue}");
                         }
 
                         finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
                         finalDamageDisplay = finalDamage;
-                        Debug.Log($"[DAMAGE] Player Ultimate: {outputKiem} damage");
-                        Debug.Log($"[SHIELD] NPC shield blocked: {shieldBlock}, Remaining: {GiapNPC}");
-                        Debug.Log($"[DAMAGE] Final damage to NPC: {finalDamage}");
 
                         MauNPC -= finalDamage;
                         NoPlayer -= 100;
@@ -673,14 +651,12 @@ public class Active : MonoBehaviour
                         if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier = (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
-                            Debug.Log($"[WEAK] Boss weak bonus: x{damageMultiplier}");
                         }
 
                         // Player có Weak → Giảm damage của Boss (vì Player kháng)
                         if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier /= (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
-                            Debug.Log($"[RESIST] Player resist: ÷{ManagerMatch.Instance.uPetsMatch.weaknessValue}");
                         }
 
                         finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
@@ -720,20 +696,17 @@ public class Active : MonoBehaviour
                         if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier = (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
-                            Debug.Log($"[WEAK] Player weak bonus: x{damageMultiplier}");
                         }
 
                         // Boss có Weak → Giảm damage của Player (vì Boss kháng)
                         if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier /= (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
-                            Debug.Log($"[RESIST] Boss resist: ÷{ManagerMatch.Instance.ePetsMatch.weaknessValue}");
                         }
 
                         finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
                         finalDamageDisplay = finalDamage;
 
-                        Debug.Log($"[DAMAGE] Player Normal: Raw: {outputKiem} → Shield: {shieldBlock} → Base: {baseDamage} → Multiplier: x{damageMultiplier:F2} → Final: {finalDamage}");
 
                         MauNPC -= finalDamage;
                         NoNPC = Mathf.Min(NoNPC + 15, 200);
@@ -757,20 +730,17 @@ public class Active : MonoBehaviour
                         if (ManagerMatch.Instance.ePetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier = (float)ManagerMatch.Instance.ePetsMatch.weaknessValue;
-                            Debug.Log($"[WEAK] Boss weak bonus: x{damageMultiplier}");
                         }
 
                         // Player có Weak → Giảm damage của Boss (vì Player kháng)
                         if (ManagerMatch.Instance.uPetsMatch.weaknessValue > 1f)
                         {
                             damageMultiplier /= (float)ManagerMatch.Instance.uPetsMatch.weaknessValue;
-                            Debug.Log($"[RESIST] Player resist: ÷{ManagerMatch.Instance.uPetsMatch.weaknessValue}");
                         }
 
                         finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
                         finalDamageDisplay = finalDamage;
 
-                        Debug.Log($"[DAMAGE] NPC Normal: Raw: {outputKiem} → Shield: {shieldBlock} → Base: {baseDamage} → Multiplier: x{damageMultiplier:F2} → Final: {finalDamage}");
 
                         MauPlayer -= finalDamage;
                         NoPlayer = Mathf.Min(NoPlayer + 15, 200);
@@ -791,7 +761,6 @@ public class Active : MonoBehaviour
                 int shieldPerPiece = IsPlayerTurn
                     ? Mathf.RoundToInt(attackP * giapPercentPerPiece)
                     : Mathf.RoundToInt(attackE * giapPercentPerPiece);
-                Debug.Log($"[SHIELD] Shield per piece: {shieldPerPiece}");
 
                 outputGiap = shieldPerPiece * count;
 
@@ -806,8 +775,6 @@ public class Active : MonoBehaviour
                     // Giáp sẽ có hiệu lực từ turn kế tiếp (turn của đối thủ)
                     GiapPlayerActiveAtTurn = turnNumber;
 
-                    Debug.Log($"[SHIELD] Player gained {outputGiap} shield at turn {turnNumber}");
-                    Debug.Log($"[SHIELD] Will be active at turn {GiapPlayerActiveAtTurn}");
                 }
                 else
                 {
@@ -819,8 +786,6 @@ public class Active : MonoBehaviour
                     GiapNPCCreatedAtTurn = turnNumber;
                     GiapPlayerActiveAtTurn = turnNumber;
 
-                    Debug.Log($"[SHIELD] NPC gained {outputGiap} shield at turn {turnNumber}");
-                    Debug.Log($"[SHIELD] Will be active at turn {GiapNPCActiveAtTurn}");
                 }
                 valueCurrent = outputGiap;
                 break;
@@ -865,7 +830,6 @@ public class Active : MonoBehaviour
                         lastStealAmount = actualStealNo;
                         lastStealType = "No";
 
-                        Debug.Log($"[STEAL] Player stole {actualStealNo} No from NPC");
                     }
                     else // Hút Mana
                     {
@@ -876,7 +840,6 @@ public class Active : MonoBehaviour
                         lastStealAmount = actualStealMana;
                         lastStealType = "Mana";
 
-                        Debug.Log($"[STEAL] Player stole {actualStealMana} Mana from NPC");
                     }
                 }
                 else // NPC Turn
@@ -894,7 +857,6 @@ public class Active : MonoBehaviour
                         lastStealAmount = actualStealNo;
                         lastStealType = "No";
 
-                        Debug.Log($"[STEAL] NPC stole {actualStealNo} No from Player");
                     }
                     else // Hút Mana
                     {
@@ -905,7 +867,6 @@ public class Active : MonoBehaviour
                         lastStealAmount = actualStealMana;
                         lastStealType = "Mana";
 
-                        Debug.Log($"[STEAL] NPC stole {actualStealMana} Mana from Player");
                     }
                 }
 
@@ -992,7 +953,6 @@ public class Active : MonoBehaviour
         {
             if (GiapNPCActiveAtTurn > 0 && turnNumber == GiapNPCActiveAtTurn)
             {
-                Debug.Log($"[SHIELD] NPC shield EXPIRED after turn {turnNumber}");
                 GiapNPC = 0;
                 GiapNPCCreatedAtTurn = -1;
                 GiapNPCActiveAtTurn = -1;
@@ -1003,16 +963,12 @@ public class Active : MonoBehaviour
         {
             if (GiapPlayerActiveAtTurn > 0 && turnNumber == GiapPlayerActiveAtTurn)
             {
-                Debug.Log($"[SHIELD] Player shield EXPIRED after turn {turnNumber}");
                 GiapPlayer = 0;
                 GiapPlayerCreatedAtTurn = -1;
                 GiapPlayerActiveAtTurn = -1;
             }
         }
 
-        Debug.Log($"[ACTIVE] Summary for Turn {turnNumber}, Entity {entityIndex}:");
-        Debug.Log($"  Player: HP={MauPlayer}/{maxMau}, Mana={ManaPlayer}/{maxMana}, No={NoPlayer}/{maxNo}, Shield={GiapPlayer}");
-        Debug.Log($"  NPC: HP={MauNPC}/{maxMauNPC}, Mana={ManaNPC}/{maxManaNPC}, No={NoNPC}/{maxNoNPC}, Shield={GiapNPC}");
     }
 
     public IEnumerator waitsomeS()
@@ -1022,9 +978,6 @@ public class Active : MonoBehaviour
 
     public void SummaryOutputs()
     {
-        Debug.Log($"[SUMMARY] Turn {turnNumber} Summary:");
-        Debug.Log($"  Player: HP={MauPlayer}/{maxMau}, Mana={ManaPlayer}/{maxMana}, No={NoPlayer}/{maxNo}");
-        Debug.Log($"  NPC: HP={MauNPC}/{maxMauNPC}, Mana={ManaNPC}/{maxManaNPC}, No={NoNPC}/{maxNoNPC}");
     }
 
     public void resetOutput()
@@ -1048,30 +1001,25 @@ public class Active : MonoBehaviour
         {
             NoPlayer += cardInfo.Value;
             NoPlayer = Mathf.Clamp(NoPlayer, 0, maxNo);
-            Debug.Log($"NoPlayer increased by: {cardInfo.Value}. Current: {NoPlayer}/{maxNo}");
         }
         else if (cardInfo.IdCard == 3)
         {
             MauPlayer += cardInfo.Value;
             MauPlayer = Mathf.Clamp(MauPlayer, 0, maxMau);
-            Debug.Log($"MauPlayer increased by: {cardInfo.Value}. Current: {MauPlayer}/{maxMau}");
         }
         else if (cardInfo.IdCard == 1)
         {
             ManaPlayer += cardInfo.Value;
             ManaPlayer = Mathf.Clamp(ManaPlayer, 0, maxMana);
-            Debug.Log($"ManaPlayer increased by: {cardInfo.Value}. Current: {ManaPlayer}/{maxMana}");
         }
         else if (ManaPlayer >= cardInfo.ConditionUse && cardInfo.IdCard >= 4)
         {
             ManaPlayer -= cardInfo.ConditionUse;
             ManaPlayer = Mathf.Clamp(ManaPlayer, 0, maxMau);
             MauNPC -= cardInfo.Value;
-            Debug.Log($"Skill used. Mana cost: {cardInfo.ConditionUse}, Damage: {cardInfo.Value}");
         }
         else
         {
-            Debug.LogWarning($"Unknown CardInfo: {cardInfo.IdCard}");
         }
 
         UpdateSlider();

@@ -818,12 +818,13 @@ public class ManagerChinhPhuc : MonoBehaviour
             noticeText.text = message;
         }
 
+        // ✅ HIỆN NOTICE NGAY (KHÔNG SCALE ANIMATION)
         notice.SetActive(true);
+        notice.transform.localScale = Vector3.one; // ✅ Set scale = 1 ngay lập tức
 
-        notice.transform.localScale = Vector3.zero;
-        LeanTween.scale(notice, Vector3.one, 0.5f)
-            .setEaseOutBounce();
+        // ✅ BỎ: LeanTween.scale animation
 
+        // ✅ GIỮ LẠI: Shake animation nếu có lỗi (optional)
         if (message.Contains("lỗi") || message.Contains("error"))
         {
             LeanTween.rotateZ(notice, 5f, 0.1f)
@@ -840,9 +841,10 @@ public class ManagerChinhPhuc : MonoBehaviour
     {
         if (notice == null) return;
 
-        LeanTween.scale(notice, Vector3.zero, 0.25f)
-            .setEaseInBack()
-            .setOnComplete(() => notice.SetActive(false));
+        // ✅ ẨN NOTICE NGAY (KHÔNG SCALE ANIMATION)
+        notice.SetActive(false);
+
+        // ✅ BỎ: LeanTween.scale animation
     }
 
     private void EnsureGrayMaterial()
