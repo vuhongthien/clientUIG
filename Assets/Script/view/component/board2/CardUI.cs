@@ -1051,7 +1051,7 @@ private IEnumerator PlayLegendBackgroundEffect()
             Debug.LogWarning("[CardUI] Cannot use card - cardData is null");
             return;
         }
-
+ConsumeCardCondition();
         // ✅ VALIDATE DOT SKILL COMPONENTS CHO LEGEND CARDS
         if (IsDotSkillCard())
         {
@@ -1774,6 +1774,40 @@ private IEnumerator ContinuousFlashBackground()
                 break;
         }
     }
+
+    /// <summary>
+/// ✅ TRỪ CONDITION SAU KHI SỬ DỤNG CARD THÀNH CÔNG
+/// </summary>
+private void ConsumeCardCondition()
+{
+    if (cardData == null || active == null) return;
+
+    string elementType = cardData.elementTypeCard.ToUpper();
+
+    // ✅ LEGEND CARDS: Trừ Power
+    if (elementType == "ATTACK_LEGEND" || elementType == "ATTACK_LEGEND_")
+    {
+        if (cardData.power > 0)
+        {
+            active.NoPlayer = (int)Mathf.Max(active.NoPlayer - cardData.power, 0);
+            Debug.Log($"[CardUI] Consumed {cardData.power} Power. Remaining: {active.NoPlayer}");
+            
+            // ✅ Cập nhật UI
+            active.UpdateSlider();
+        }
+        return;
+    }
+
+    // ✅ NORMAL CARDS: Trừ Mana
+    if (cardData.conditionUse > 0)
+    {
+        active.ManaPlayer = (int)Mathf.Max(active.ManaPlayer - cardData.conditionUse, 0);
+        Debug.Log($"[CardUI] Consumed {cardData.conditionUse} Mana. Remaining: {active.ManaPlayer}");
+        
+        // ✅ Cập nhật UI
+        active.UpdateSlider();
+    }
+}
 
     private IEnumerator CallAPIUseCard()
     {

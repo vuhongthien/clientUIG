@@ -17,8 +17,11 @@ public class GiftDTO
     public int starWhite;
     public int starBlue;
     public int starRed;
+    public int ruby;
     public int wheel;
     
+    public int wheelDay;
+    public int avtId;
     // Complex rewards
     public int petId;
     public string petName;

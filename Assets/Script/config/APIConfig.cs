@@ -2,7 +2,12 @@ using UnityEngine;
 
 public class APIConfig : MonoBehaviour
 {
-    private static string BASE_URL = "http://localhost:8080";
+
+    private static string DOMAIN = "pokiguard.online";
+
+    private static string BASE_URL = "https://"+ DOMAIN;
+    public static string VERSION = "1.0.0";
+    public static string SOCKET = "wss://"+ DOMAIN + "/ws-chat";
 
     // GET APIs
     public static string GET_PETS_ENEMYS(int id) => $"{BASE_URL}/pets/{id}";
@@ -235,7 +240,7 @@ public class APIConfig : MonoBehaviour
     public static string ADD_CARD_TO_USER => $"{BASE_URL}/api/user-cards/add";
 
     // ===== EQUIPMENT APIS =====
-    
+
     /// <summary>
     /// GET /api/equipment/{userId}/pets?page=0&size=10
     /// Lấy danh sách pet của user (phân trang)

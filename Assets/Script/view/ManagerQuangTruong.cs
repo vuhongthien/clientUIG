@@ -77,6 +77,8 @@ public class ManagerQuangTruong : MonoBehaviour
 
     [Header("GiftBox - Reward Prefabs")]
     public GameObject petRW;
+    
+    public GameObject avtRW;
     public GameObject cardRW;
     public GameObject stoneRW;
     public GameObject goldRW;
@@ -86,6 +88,10 @@ public class ManagerQuangTruong : MonoBehaviour
     public GameObject bluestarRW;
     public GameObject expRW;
     public GameObject wheelRW;
+    
+    public GameObject wheelDayRW;
+    
+    public GameObject rubyRW;
 
     [Header("GiftBox - Optional")]
     public GameObject giftBoxIcon;
@@ -729,12 +735,34 @@ public class ManagerQuangTruong : MonoBehaviour
             petItem.SetActive(true);
             UpdatePetRewardUI(petItem, gift.petId, gift.petName);
         }
+Debug.Log("gift.avtId: " + gift.avtId);
+        if (gift.avtId > 0 && avtRW != null)
+        {
+            GameObject avtItem = Instantiate(avtRW, listReward);
+            avtItem.SetActive(true);
+            UpdateAVTRewardUI(avtItem, gift.avtId);
+        }
 
         if (gift.cardId > 0 && cardRW != null)
         {
             GameObject cardItem = Instantiate(cardRW, listReward);
             cardItem.SetActive(true);
             UpdateCardRewardUI(cardItem, gift.cardId, gift.cardName);
+        }
+Debug.Log("gift.wheelDay: " + gift.wheelDay);
+        if (gift.wheelDay > 0 && wheelDayRW != null)
+        {
+            GameObject wheelDayItem = Instantiate(wheelDayRW, listReward);
+            wheelDayItem.SetActive(true);
+            UpdateRewardUI(wheelDayItem, gift.wheelDay);
+        }
+
+        Debug.Log("gift.ruby: " + gift.ruby);
+        if (gift.ruby > 0 && rubyRW != null)
+        {
+            GameObject rubyItem = Instantiate(rubyRW, listReward);
+            rubyItem.SetActive(true);
+            UpdateRewardUI(rubyItem, gift.ruby);
         }
 
         // Multiple stones
@@ -793,6 +821,20 @@ public class ManagerQuangTruong : MonoBehaviour
         }
     }
 
+        void UpdateAVTRewardUI(GameObject petObj, int avtId)
+    {
+        Image imgPet = petObj.transform.Find("imgtAvt")?.GetComponent<Image>();
+        Text txtLv = petObj.transform.Find("txtCount")?.GetComponent<Text>();
+
+        if (imgPet != null)
+        {
+            Sprite petSprite = Resources.Load<Sprite>("Image/Avt/" + avtId);
+            if (petSprite != null) imgPet.sprite = petSprite;
+        }
+
+            txtLv.text = "Avatar";
+    }
+
     void UpdateCardRewardUI(GameObject cardObj, int cardId, string cardName)
     {
         Image imgCard = cardObj.transform.Find("imgCard")?.GetComponent<Image>();
@@ -800,13 +842,13 @@ public class ManagerQuangTruong : MonoBehaviour
 
         if (imgCard != null)
         {
-            Sprite cardSprite = Resources.Load<Sprite>("Image/Cards/" + cardId);
+            Sprite cardSprite = Resources.Load<Sprite>("Image/Card/card" + cardId);
             if (cardSprite != null) imgCard.sprite = cardSprite;
         }
 
         if (txtCount != null)
         {
-            txtCount.text = cardName ?? "Card";
+            txtCount.text = "x1";
         }
     }
 
