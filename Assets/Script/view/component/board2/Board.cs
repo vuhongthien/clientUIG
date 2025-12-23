@@ -1362,7 +1362,7 @@ public class Board : MonoBehaviour
         }
 
         // ===== 9) API & TURN TRANSITION =====
-        if (active != null)
+        if (active != null && active.IsPlayerTurn)
         {
             int currentValue = int.Parse(ManagerMatch.Instance.txtNLUser.text);
             currentValue--;
@@ -1374,6 +1374,8 @@ public class Board : MonoBehaviour
                 null,
                 OnError
             );
+
+            // ✅ Kiểm tra năng lượng sau khi trừ
             if (!CheckEnergyAndShowWarning())
             {
                 // Hết năng lượng → Dừng xử lý, đợi về QuangTruong
