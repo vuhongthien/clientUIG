@@ -35,6 +35,7 @@ public class ChatManager : MonoBehaviour
 
     [Header("Settings")]
     public int maxMessages = 50;
+    public string webSocketUrl = "ws://localhost:8080/ws-chat";
 
     // Private variables
     private WebSocket webSocket;
@@ -195,25 +196,10 @@ public class ChatManager : MonoBehaviour
             return;
         }
         username = name;
-        Debug.Log($"[ChatManager] 🔌 Connecting to:------------------- {APIConfig.SOCKET}");
+        Debug.Log($"[ChatManager] 🔌 Connecting to: {webSocketUrl}");
         UpdateConnectionStatus("Connecting...", disconnectedColor);
 
-        webSocket = new WebSocket(APIConfig.SOCKET);
-
-        webSocket.OnOpen += OnWebSocketOpen;
-        webSocket.OnMessage += OnWebSocketMessage;
-        webSocket.OnError += OnWebSocketError;
-        webSocket.OnClose += OnWebSocketClose;
-
-        webSocket.Connect();
-    }
-
-        public void ConnectWebSocketWithoutName()
-    {
-        Debug.Log($"[ChatManager] 🔌 Connecting to:------------------- {APIConfig.SOCKET}");
-        UpdateConnectionStatus("Connecting...", disconnectedColor);
-
-        webSocket = new WebSocket(APIConfig.SOCKET);
+        webSocket = new WebSocket(webSocketUrl);
 
         webSocket.OnOpen += OnWebSocketOpen;
         webSocket.OnMessage += OnWebSocketMessage;
@@ -230,9 +216,8 @@ public class ChatManager : MonoBehaviour
 
         UnityMainThreadDispatcher.Instance().Enqueue(() =>
         {
-            txtConnectionStatus.gameObject.SetActive(false);
             UpdateConnectionStatus("Connected", connectedColor);
-            
+
             if (inputMessage != null)
                 inputMessage.interactable = true;
             if (btnSend != null)
@@ -275,7 +260,6 @@ public class ChatManager : MonoBehaviour
 
         UnityMainThreadDispatcher.Instance().Enqueue(() =>
         {
-            txtConnectionStatus.gameObject.SetActive(true);
             UpdateConnectionStatus("Error", disconnectedColor);
         });
     }
@@ -287,7 +271,6 @@ public class ChatManager : MonoBehaviour
 
         UnityMainThreadDispatcher.Instance().Enqueue(() =>
         {
-            txtConnectionStatus.gameObject.SetActive(true);
             UpdateConnectionStatus("Disconnected", disconnectedColor);
 
             if (inputMessage != null)

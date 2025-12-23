@@ -113,9 +113,6 @@ public class CardFight : MonoBehaviour
         // 2. ÁP DỤNG HIỆU ỨNG THEO CARD
         switch (cardID)
         {
-            case 6: // HP
-            case 7: // HP
-            case 8: // HP
             case 1: // HP
                 active.MauPlayer = Mathf.Min(active.MauPlayer + value, active.maxMau);
                 active.valueCurrent = value;
@@ -135,7 +132,6 @@ public class CardFight : MonoBehaviour
                 break;
 
             case 4: // DameCard
-            case 5: // DameCard
                 active.MauNPC = Mathf.Max(active.MauNPC - value, 0);
                 active.valueCurrent = value;
                 Debug.Log($"Card Dame: -{value} HP NPC → {active.MauNPC}/{active.maxMauNPC}");

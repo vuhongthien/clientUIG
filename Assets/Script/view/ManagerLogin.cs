@@ -27,11 +27,11 @@ public class ManagerLogin : MonoBehaviour
         LoginRequest loginData = new LoginRequest
         {
             user = usernameInput.text, // Đảm bảo tên trường khớp API
-            password = passwordInput.text,
-            version = APIConfig.VERSION
+            password = passwordInput.text
         };
 
         string jsonData = JsonUtility.ToJson(loginData);
+
         using (UnityWebRequest request = new UnityWebRequest(APIConfig.POST_USER_LOGIN, "POST"))
         {
             byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
@@ -55,12 +55,7 @@ public class ManagerLogin : MonoBehaviour
             }
             else
             {
-                
-                errorText.text = "Tài khoản hoặc mật khẩu không chính xác";
-                if ( request.responseCode == 500)
-                {
-                    errorText.text = "Phiên bản đã hết hạn";
-                }
+                errorText.text = "Tài khoản hoặc mật khẻu không chính xác";
                 errorText.gameObject.SetActive(true);
             }
         }
@@ -71,6 +66,4 @@ public class LoginRequest
 {
     public string user;
     public string password;
-
-    public string version;
 }
