@@ -23,48 +23,56 @@ public class ManagerLogin : MonoBehaviour
     }
 
     IEnumerator LoginCoroutine()
+{
+    LoginRequest loginData = new LoginRequest
     {
-        LoginRequest loginData = new LoginRequest
+        user = usernameInput.text,
+        password = passwordInput.text,
+        version = APIConfig.VERSION
+    };
+
+    string jsonData = JsonUtility.ToJson(loginData);
+    using (UnityWebRequest request = new UnityWebRequest(APIConfig.POST_USER_LOGIN, "POST"))
+    {
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        LoadingPanel.SetActive(true);
+        errorText.gameObject.SetActive(false);
+
+        yield return request.SendWebRequest();
+
+        LoadingPanel.SetActive(false);
+
+        if (request.result == UnityWebRequest.Result.Success)
         {
-            user = usernameInput.text, // Đảm bảo tên trường khớp API
-            password = passwordInput.text,
-            version = APIConfig.VERSION
-        };
-
-        string jsonData = JsonUtility.ToJson(loginData);
-        using (UnityWebRequest request = new UnityWebRequest(APIConfig.POST_USER_LOGIN, "POST"))
+            UserDTO data = JsonUtility.FromJson<UserDTO>(request.downloadHandler.text);
+            PlayerPrefs.SetInt("userId", data.id);
+            PlayerPrefs.Save();
+            SceneManager.LoadScene("QuangTruong");
+        }
+        else
         {
-            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            LoadingPanel.SetActive(true);
-            errorText.gameObject.SetActive(false);
-
-            yield return request.SendWebRequest();
-
-            LoadingPanel.SetActive(false);
-
-            if (request.result == UnityWebRequest.Result.Success)
+            string errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại!";
+            
+            // Parse error từ response
+            string responseText = request.downloadHandler.text;
+            if (responseText.Contains("VERSION_EXPIRED"))
             {
-                UserDTO data = JsonUtility.FromJson<UserDTO>(request.downloadHandler.text);
-                PlayerPrefs.SetInt("userId", data.id); // Lưu user ID
-                PlayerPrefs.Save();
-                SceneManager.LoadScene("QuangTruong"); // Chuyển cảnh
+                errorMessage = "Phiên bản đã hết hạn. Vui lòng cập nhật!";
             }
-            else
+            else if (responseText.Contains("INVALID_CREDENTIALS"))
             {
-                
-                errorText.text = "Tài khoản hoặc mật khẩu không chính xác";
-                if ( request.responseCode == 500)
-                {
-                    errorText.text = "Phiên bản đã hết hạn";
-                }
-                errorText.gameObject.SetActive(true);
+                errorMessage = "Tài khoản hoặc mật khẩu không chính xác";
             }
+            
+            errorText.text = errorMessage;
+            errorText.gameObject.SetActive(true);
         }
     }
+}
 }
 [System.Serializable]
 public class LoginRequest

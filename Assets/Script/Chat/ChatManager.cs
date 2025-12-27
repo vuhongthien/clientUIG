@@ -65,7 +65,7 @@ public class ChatManager : MonoBehaviour
 
         if (userId == 0)
         {
-            Debug.LogError("[ChatManager] User ID not found!");
+            // Debug.LogError("[ChatManager] User ID not found!");
             return;
         }
 
@@ -101,7 +101,7 @@ public class ChatManager : MonoBehaviour
     {
         if (chatContainer == null)
         {
-            Debug.LogError("[ChatManager] chatContainer is null!");
+            // Debug.LogError("[ChatManager] chatContainer is null!");
             return;
         }
 
@@ -109,12 +109,12 @@ public class ChatManager : MonoBehaviour
         float currentY = chatContainer.anchoredPosition.y;
 
         // ✅ VỊ TRÍ MỞ (Left = 0)
-        openPosition = new Vector2(-319.58f, currentY);
+        openPosition = new Vector2(217.51f, currentY);
 
         // ✅ VỊ TRÍ ĐÓNG (Left = -429.11 - ẩn bên trái)
-        closedPosition = new Vector2(-748.11f, currentY);
+        closedPosition = new Vector2(-217.92f, currentY);
 
-        Debug.Log($"[ChatManager] Open: {openPosition}, Closed: {closedPosition}");
+        // Debug.Log($"[ChatManager] Open: {openPosition}, Closed: {closedPosition}");
     }
 
 
@@ -140,7 +140,7 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     void OpenChat()
     {
-        Debug.Log("[ChatManager] 📂 Opening chat...");
+        // Debug.Log("[ChatManager] 📂 Opening chat...");
 
         if (chatContainer == null) return;
 
@@ -151,7 +151,7 @@ public class ChatManager : MonoBehaviour
             .setEase(easeType)
             .setOnComplete(() =>
             {
-                Debug.Log("[ChatManager] ✅ Chat opened");
+                // Debug.Log("[ChatManager] ✅ Chat opened");
             });
     }
 
@@ -160,7 +160,7 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     void CloseChat()
     {
-        Debug.Log("[ChatManager] 📁 Closing chat...");
+        // Debug.Log("[ChatManager] 📁 Closing chat...");
 
         if (chatContainer == null) return;
 
@@ -171,7 +171,7 @@ public class ChatManager : MonoBehaviour
             .setEase(easeType)
             .setOnComplete(() =>
             {
-                Debug.Log("[ChatManager] ✅ Chat closed");
+                // Debug.Log("[ChatManager] ✅ Chat closed");
             });
     }
 
@@ -190,12 +190,12 @@ public class ChatManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(name))
         {
-            Debug.LogError("[ChatManager] Username not loaded yet!" + name);
+            // Debug.LogError("[ChatManager] Username not loaded yet!" + name);
             UpdateConnectionStatus("Please wait...", disconnectedColor);
             return;
         }
         username = name;
-        Debug.Log($"[ChatManager] 🔌 Connecting to:------------------- {APIConfig.SOCKET}");
+        // Debug.Log($"[ChatManager] 🔌 Connecting to:------------------- {APIConfig.SOCKET}");
         UpdateConnectionStatus("Connecting...", disconnectedColor);
 
         webSocket = new WebSocket(APIConfig.SOCKET);
@@ -208,9 +208,9 @@ public class ChatManager : MonoBehaviour
         webSocket.Connect();
     }
 
-        public void ConnectWebSocketWithoutName()
+    public void ConnectWebSocketWithoutName()
     {
-        Debug.Log($"[ChatManager] 🔌 Connecting to:------------------- {APIConfig.SOCKET}");
+        // Debug.Log($"[ChatManager] 🔌 Connecting to:------------------- {APIConfig.SOCKET}");
         UpdateConnectionStatus("Connecting...", disconnectedColor);
 
         webSocket = new WebSocket(APIConfig.SOCKET);
@@ -225,14 +225,17 @@ public class ChatManager : MonoBehaviour
 
     private void OnWebSocketOpen(object sender, EventArgs e)
     {
-        Debug.Log("[ChatManager] ✅ WebSocket connected!");
+        // Debug.Log("[ChatManager] ✅ WebSocket connected!");
         isConnected = true;
 
         UnityMainThreadDispatcher.Instance().Enqueue(() =>
         {
+            // ✅ CHECK NULL trước khi truy cập
+            if (this == null || txtConnectionStatus == null) return;
+
             txtConnectionStatus.gameObject.SetActive(false);
             UpdateConnectionStatus("Connected", connectedColor);
-            
+
             if (inputMessage != null)
                 inputMessage.interactable = true;
             if (btnSend != null)
@@ -252,7 +255,7 @@ public class ChatManager : MonoBehaviour
     private void OnWebSocketMessage(object sender, MessageEventArgs e)
     {
         string json = e.Data;
-        Debug.Log($"[ChatManager] 📨 Message received: {json}");
+        // Debug.Log($"[ChatManager] 📨 Message received: {json}");
 
         try
         {
@@ -260,21 +263,27 @@ public class ChatManager : MonoBehaviour
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
+                // ✅ CHECK NULL
+                if (this == null) return;
+
                 messageQueue.Enqueue(message);
             });
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[ChatManager] ❌ Parse error: {ex.Message}");
+            // Debug.LogError($"[ChatManager] ❌ Parse error: {ex.Message}");
         }
     }
 
     private void OnWebSocketError(object sender, ErrorEventArgs e)
     {
-        Debug.LogError($"[ChatManager] ❌ WebSocket error: {e.Message}");
+        // Debug.LogError($"[ChatManager] ❌ WebSocket error: {e.Message}");
 
         UnityMainThreadDispatcher.Instance().Enqueue(() =>
         {
+            // ✅ CHECK NULL
+            if (this == null || txtConnectionStatus == null) return;
+
             txtConnectionStatus.gameObject.SetActive(true);
             UpdateConnectionStatus("Error", disconnectedColor);
         });
@@ -282,11 +291,14 @@ public class ChatManager : MonoBehaviour
 
     private void OnWebSocketClose(object sender, CloseEventArgs e)
     {
-        Debug.Log($"[ChatManager] 🔌 WebSocket closed: {e.Code} - {e.Reason}");
+        // Debug.Log($"[ChatManager] 🔌 WebSocket closed: {e.Code} - {e.Reason}");
         isConnected = false;
 
         UnityMainThreadDispatcher.Instance().Enqueue(() =>
         {
+            // ✅ CHECK NULL - QUAN TRỌNG NHẤT Ở ĐÂY
+            if (this == null || txtConnectionStatus == null) return;
+
             txtConnectionStatus.gameObject.SetActive(true);
             UpdateConnectionStatus("Disconnected", disconnectedColor);
 
@@ -310,7 +322,7 @@ public class ChatManager : MonoBehaviour
     {
         if (!isConnected)
         {
-            Debug.LogWarning("[ChatManager] ⚠️ Not connected!");
+            // Debug.LogWarning("[ChatManager] ⚠️ Not connected!");
             return;
         }
 
@@ -340,68 +352,68 @@ public class ChatManager : MonoBehaviour
     {
         if (webSocket == null || !webSocket.IsAlive)
         {
-            Debug.LogWarning("[ChatManager] ⚠️ WebSocket not connected!");
+            // Debug.LogWarning("[ChatManager] ⚠️ WebSocket not connected!");
             return;
         }
 
         string json = JsonUtility.ToJson(messageObj);
         webSocket.Send(json);
 
-        Debug.Log($"[ChatManager] 📤 Message sent: {json}");
+        // Debug.Log($"[ChatManager] 📤 Message sent: {json}");
     }
 
     void DisplayMessage(ChatMessageDTO message)
-{
-    if (messagePrefab == null || chatContent == null)
     {
-        Debug.LogError("[ChatManager] ❌ MessagePrefab or ChatContent is null!");
-        return;
-    }
-
-    // ✅ BỎ QUA JOIN/LEAVE - KHÔNG HIỆN GÌ CẢ
-    if (message.type == "JOIN" || message.type == "LEAVE")
-    {
-        Debug.Log($"[ChatManager] 🚫 Ignoring {message.type} message from {message.username}");
-        return; // ✅ THOÁT NGAY, KHÔNG TẠO UI
-    }
-
-    // ✅ CHỈ HIỆN NORMAL MESSAGE
-    GameObject messageObj = Instantiate(messagePrefab, chatContent);
-    messageObj.SetActive(true);
-
-    Text txtUsername = messageObj.transform.Find("txtUsername")?.GetComponent<Text>();
-    Text txtMessage = messageObj.transform.Find("txtMessage")?.GetComponent<Text>();
-    Text txtTime = messageObj.transform.Find("txtTime")?.GetComponent<Text>();
-
-    if (txtUsername != null)
-        txtUsername.text = message.username + ":";
-        
-    if (txtMessage != null)
-        txtMessage.text = message.message;
-        
-    if (txtTime != null && !string.IsNullOrEmpty(message.timestamp))
-    {
-        try
+        if (messagePrefab == null || chatContent == null)
         {
-            DateTime dt = DateTime.Parse(message.timestamp);
-            txtTime.text = dt.ToString("HH:mm");
+            // Debug.LogError("[ChatManager] ❌ MessagePrefab or ChatContent is null!");
+            return;
         }
-        catch
+
+        // ✅ BỎ QUA JOIN/LEAVE - KHÔNG HIỆN GÌ CẢ
+        if (message.type == "JOIN" || message.type == "LEAVE")
         {
-            txtTime.text = "";
+            // Debug.Log($"[ChatManager] 🚫 Ignoring {message.type} message from {message.username}");
+            return; // ✅ THOÁT NGAY, KHÔNG TẠO UI
         }
-    }
 
-    // Cleanup old messages
-    if (chatContent.childCount > maxMessages)
-    {
-        Destroy(chatContent.GetChild(0).gameObject);
-    }
+        // ✅ CHỈ HIỆN NORMAL MESSAGE
+        GameObject messageObj = Instantiate(messagePrefab, chatContent);
+        messageObj.SetActive(true);
 
-    Canvas.ForceUpdateCanvases();
-    LayoutRebuilder.ForceRebuildLayoutImmediate(chatContent.GetComponent<RectTransform>());
-    StartCoroutine(ScrollToBottom());
-}
+        Text txtUsername = messageObj.transform.Find("txtUsername")?.GetComponent<Text>();
+        Text txtMessage = messageObj.transform.Find("txtMessage")?.GetComponent<Text>();
+        Text txtTime = messageObj.transform.Find("txtTime")?.GetComponent<Text>();
+
+        if (txtUsername != null)
+            txtUsername.text = message.username + ":";
+
+        if (txtMessage != null)
+            txtMessage.text = message.message;
+
+        if (txtTime != null && !string.IsNullOrEmpty(message.timestamp))
+        {
+            try
+            {
+                DateTime dt = DateTime.Parse(message.timestamp);
+                txtTime.text = dt.ToString("HH:mm");
+            }
+            catch
+            {
+                txtTime.text = "";
+            }
+        }
+
+        // Cleanup old messages
+        if (chatContent.childCount > maxMessages)
+        {
+            Destroy(chatContent.GetChild(0).gameObject);
+        }
+
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(chatContent.GetComponent<RectTransform>());
+        StartCoroutine(ScrollToBottom());
+    }
 
     IEnumerator ScrollToBottom()
     {

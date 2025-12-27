@@ -6,7 +6,7 @@ public class BossBattleResultDTO
     public long userId;
     public long bossScheduleId;
     public int damageDealt;
-    public bool isVictory;
+    public bool victory;
     public int turnCount;
 }
 

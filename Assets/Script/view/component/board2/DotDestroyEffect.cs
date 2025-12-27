@@ -24,6 +24,14 @@ public class DotDestroyEffect : MonoBehaviour
     public void PlayDestroyEffect(System.Action onComplete = null)
     {
         if (isDestroying) return;
+
+        // ✅ KIỂM TRA OBJECT CÓ ACTIVE KHÔNG
+        if (!gameObject.activeInHierarchy)
+        {
+            Debug.LogWarning($"[DotDestroyEffect] Cannot play effect on inactive object: {gameObject.name}");
+            onComplete?.Invoke();
+            return;
+        }
         
         isDestroying = true;
         StartCoroutine(FadeAndShrink(onComplete));
@@ -34,6 +42,13 @@ public class DotDestroyEffect : MonoBehaviour
     /// </summary>
     private IEnumerator FadeAndShrink(System.Action onComplete)
     {
+        // ✅ KIỂM TRA LƯỢT 1: Trước khi bắt đầu
+        if (!gameObject.activeInHierarchy)
+        {
+            onComplete?.Invoke();
+            yield break;
+        }
+
         Vector3 startScale = transform.localScale;
         Color startColor = spriteRenderer != null ? spriteRenderer.color : Color.white;
 
@@ -41,6 +56,13 @@ public class DotDestroyEffect : MonoBehaviour
 
         while (elapsed < duration)
         {
+            // ✅ KIỂM TRA LƯỢT 2: Mỗi frame trong animation
+            if (gameObject == null || !gameObject.activeInHierarchy)
+            {
+                onComplete?.Invoke();
+                yield break;
+            }
+
             elapsed += Time.deltaTime;
             float progress = elapsed / duration;
 
@@ -58,13 +80,17 @@ public class DotDestroyEffect : MonoBehaviour
             yield return null;
         }
 
-        // Đảm bảo trạng thái cuối cùng
-        transform.localScale = Vector3.zero;
-        if (spriteRenderer != null)
+        // ✅ KIỂM TRA LƯỢT 3: Trước khi set trạng thái cuối
+        if (gameObject != null && gameObject.activeInHierarchy)
         {
-            Color finalColor = spriteRenderer.color;
-            finalColor.a = 0f;
-            spriteRenderer.color = finalColor;
+            // Đảm bảo trạng thái cuối cùng
+            transform.localScale = Vector3.zero;
+            if (spriteRenderer != null)
+            {
+                Color finalColor = spriteRenderer.color;
+                finalColor.a = 0f;
+                spriteRenderer.color = finalColor;
+            }
         }
 
         // Callback
@@ -76,7 +102,21 @@ public class DotDestroyEffect : MonoBehaviour
     /// </summary>
     public static void PlayEffect(GameObject dotObject, System.Action onComplete = null)
     {
-        if (dotObject == null) return;
+        // ✅ KIỂM TRA NULL
+        if (dotObject == null)
+        {
+            Debug.LogWarning("[DotDestroyEffect] dotObject is null!");
+            onComplete?.Invoke();
+            return;
+        }
+
+        // ✅ KIỂM TRA ACTIVE TRƯỚC KHI THÊM COMPONENT
+        if (!dotObject.activeInHierarchy)
+        {
+            Debug.LogWarning($"[DotDestroyEffect] Cannot play effect on inactive object: {dotObject.name}");
+            onComplete?.Invoke();
+            return;
+        }
 
         DotDestroyEffect effect = dotObject.GetComponent<DotDestroyEffect>();
         if (effect == null)

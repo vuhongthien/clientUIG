@@ -569,19 +569,22 @@ public class ManagerChinhPhuc : MonoBehaviour
                         string reA = (petEnemy.requestAttack * 0.08).ToString();
                         int petId = petEnemy.id;
 
-                        int userRequestAttack = ManagerQuangTruong.Instance.txtCtint;
-
-                        AddPetButtonAnimation(buttons[j].gameObject);
-
+                        int requiredAttack = petEnemy.requestAttack; // Lưu giá trị yêu cầu
                         buttons[j].onClick.RemoveAllListeners();
-                        if (userRequestAttack < petEnemy.requestAttack)
+                        buttons[j].onClick.AddListener(() =>
                         {
-                            buttons[j].onClick.AddListener(ToggleNotice);
-                        }
-                        else
-                        {
-                            buttons[j].onClick.AddListener(() => OpenRoomWithPet(petId, reA));
-                        }
+                            // ✅ Kiểm tra chiến tích tại thời điểm click
+                            int currentUserAttack = ManagerQuangTruong.Instance.txtCtint;
+
+                            if (currentUserAttack < requiredAttack)
+                            {
+                                ToggleNotice();
+                            }
+                            else
+                            {
+                                OpenRoomWithPet(petId, reA);
+                            }
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -618,13 +621,15 @@ public class ManagerChinhPhuc : MonoBehaviour
         PlayerPrefs.SetInt("requestAttack", ct);
         if (cachedPetData != null)
         {
-            foreach (var group in cachedPetData)
+            for (int groupIndex = 0; groupIndex < cachedPetData.Count; groupIndex++)
             {
+                var group = cachedPetData[groupIndex];
                 var foundPet = group.listPetEnemy.FirstOrDefault(p => p.id == petId);
                 if (foundPet != null)
                 {
                     PlayerPrefs.SetInt("EnemyPetLevel", foundPet.leverDisplay);
-                    Debug.Log($"[ChinhPhuc] Saved Enemy Pet Level: {foundPet.leverDisplay}");
+                    PlayerPrefs.SetInt("SelectedGroupIndex", groupIndex); // ✅ LƯU GROUP INDEX
+                    Debug.Log($"[ChinhPhuc] Saved Group Index: {groupIndex}, Enemy Pet Level: {foundPet.leverDisplay}");
                     break;
                 }
             }

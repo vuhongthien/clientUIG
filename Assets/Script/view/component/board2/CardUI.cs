@@ -192,23 +192,23 @@ public class CardUI : MonoBehaviour
     [Tooltip("Thời gian rung (giây)")]
     public float shakeDuration = 0.5f;
     private Color originalBackgroundColor;
-private bool isBackgroundEffectActive = false;
-[Header("Legend Card Background Effects")]
+    private bool isBackgroundEffectActive = false;
+    [Header("Legend Card Background Effects")]
 
-[Tooltip("Chế độ tương phản: true = trắng, false = đen")]
-public bool useWhiteContrast = true;
+    [Tooltip("Chế độ tương phản: true = trắng, false = đen")]
+    public bool useWhiteContrast = true;
 
-[Tooltip("Màu tương phản trắng")]
-public Color whiteContrastColor = new Color(0.95f, 0.95f, 0.95f, 1f);
+    [Tooltip("Màu tương phản trắng")]
+    public Color whiteContrastColor = new Color(0.95f, 0.95f, 0.95f, 1f);
 
-[Tooltip("Màu tương phản đen")]
-public Color blackContrastColor = new Color(0.1f, 0.1f, 0.1f, 1f);
+    [Tooltip("Màu tương phản đen")]
+    public Color blackContrastColor = new Color(0.1f, 0.1f, 0.1f, 1f);
 
-[Tooltip("Thời gian chuyển sang màu tương phản (giây)")]
-public float contrastTransitionTime = 0.05f;
+    [Tooltip("Thời gian chuyển sang màu tương phản (giây)")]
+    public float contrastTransitionTime = 0.05f;
 
-[Tooltip("Chế độ flash: true = có transition mượt, false = flash gấp")]
-public bool smoothTransition = false; // ✅ THÊM OPTION
+    [Tooltip("Chế độ flash: true = có transition mượt, false = flash gấp")]
+    public bool smoothTransition = false; // ✅ THÊM OPTION
 
 
     void Start()
@@ -222,11 +222,11 @@ public bool smoothTransition = false; // ✅ THÊM OPTION
             Debug.Log("[CardUI] Card hidden - no cardData assigned");
             return; // ✅ DỪNG KHỞI TẠO
         }
-if (backgroundImage != null)
-    {
-        originalBackgroundColor = backgroundImage.color;
-        Debug.Log($"[CardUI] Saved original background color: {originalBackgroundColor}");
-    }
+        if (backgroundImage != null)
+        {
+            originalBackgroundColor = backgroundImage.color;
+            Debug.Log($"[CardUI] Saved original background color: {originalBackgroundColor}");
+        }
         // ✅ Setup imgtCard
         if (imgtCard == null)
         {
@@ -281,182 +281,182 @@ if (backgroundImage != null)
             active.OnTurnStart += OnTurnStart;
         }
     }
-/// <summary>
-/// ✅ PHASE 1: NHẤP NHÁY LIÊN TỤC - LINH HOẠT
-/// </summary>
-private IEnumerator ChangeBackgroundToContrast()
-{
-    if (backgroundImage == null)
+    /// <summary>
+    /// ✅ PHASE 1: NHẤP NHÁY LIÊN TỤC - LINH HOẠT
+    /// </summary>
+    private IEnumerator ChangeBackgroundToContrast()
     {
-        Debug.LogWarning("[CardUI] Background image not assigned!");
-        yield break;
-    }
-
-    isBackgroundEffectActive = true;
-
-    Debug.Log($"[CardUI] Starting continuous flash (Smooth: {smoothTransition})");
-
-    bool isWhite = true;
-
-    while (!hasFinishedDotSkill)
-    {
-        Color targetColor = isWhite ? whiteContrastColor : blackContrastColor;
-        
-        if (smoothTransition)
+        if (backgroundImage == null)
         {
-            // ✅ CHUYỂN MƯỢT
-            float elapsed = 0f;
-            Color startColor = backgroundImage.color;
+            Debug.LogWarning("[CardUI] Background image not assigned!");
+            yield break;
+        }
 
-            while (elapsed < contrastTransitionTime && !hasFinishedDotSkill)
+        isBackgroundEffectActive = true;
+
+        Debug.Log($"[CardUI] Starting continuous flash (Smooth: {smoothTransition})");
+
+        bool isWhite = true;
+
+        while (!hasFinishedDotSkill)
+        {
+            Color targetColor = isWhite ? whiteContrastColor : blackContrastColor;
+
+            if (smoothTransition)
             {
-                elapsed += Time.deltaTime;
-                float t = elapsed / contrastTransitionTime;
-                
-                backgroundImage.color = Color.Lerp(startColor, targetColor, t);
-                
-                yield return null;
+                // ✅ CHUYỂN MƯỢT
+                float elapsed = 0f;
+                Color startColor = backgroundImage.color;
+
+                while (elapsed < contrastTransitionTime && !hasFinishedDotSkill)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = elapsed / contrastTransitionTime;
+
+                    backgroundImage.color = Color.Lerp(startColor, targetColor, t);
+
+                    yield return null;
+                }
             }
+            else
+            {
+                // ✅ FLASH GẤP
+                backgroundImage.color = targetColor;
+                yield return new WaitForSeconds(contrastTransitionTime);
+            }
+
+            // ✅ THOÁT SỚM NẾU ĐÃ NHẤN ENTER
+            if (hasFinishedDotSkill)
+            {
+                break;
+            }
+
+            // Đổi màu
+            isWhite = !isWhite;
         }
-        else
+
+        Debug.Log("[CardUI] Continuous flash stopped");
+    }
+
+    /// <summary>
+    /// ✅ PHASE 2: RUNG LẮC SAU KHI NHẤN ENTER (FLASH VẪN CHẠY SONG SONG)
+    /// </summary>
+    private IEnumerator ShakeBackgroundAfterEnter()
+    {
+        if (backgroundImage == null || !isBackgroundEffectActive)
         {
-            // ✅ FLASH GẤP
-            backgroundImage.color = targetColor;
-            yield return new WaitForSeconds(contrastTransitionTime);
+            yield break;
         }
 
-        // ✅ THOÁT SỚM NẾU ĐÃ NHẤN ENTER
-        if (hasFinishedDotSkill)
+        Debug.Log($"[CardUI] Starting earthquake shake for {shakeDuration}s");
+
+        Vector3 originalPosition = backgroundImage.rectTransform.anchoredPosition;
+        Vector3 originalScale = backgroundImage.rectTransform.localScale;
+
+        float elapsed = 0f;
+
+        while (elapsed < shakeDuration)
         {
-            break;
+            // ✅ RUNG MẠNH, GIẢM DẦN
+            float progress = elapsed / shakeDuration;
+            float currentMagnitude = shakeMagnitude * (1f - progress);
+
+            float x = Random.Range(-currentMagnitude, currentMagnitude);
+            float y = Random.Range(-currentMagnitude, currentMagnitude);
+
+            backgroundImage.rectTransform.anchoredPosition = originalPosition + new Vector3(x, y, 0);
+
+            // ✅ ZOOM NHẸ
+            float zoom = 1f + Mathf.Sin(elapsed * 30f) * 0.01f * (1f - progress);
+            backgroundImage.rectTransform.localScale = originalScale * zoom;
+
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        // Đổi màu
-        isWhite = !isWhite;
-    }
-    
-    Debug.Log("[CardUI] Continuous flash stopped");
-}
+        // ✅ RESET VỊ TRÍ VÀ SCALE
+        backgroundImage.rectTransform.anchoredPosition = originalPosition;
+        backgroundImage.rectTransform.localScale = originalScale;
 
-/// <summary>
-/// ✅ PHASE 2: RUNG LẮC SAU KHI NHẤN ENTER (FLASH VẪN CHẠY SONG SONG)
-/// </summary>
-private IEnumerator ShakeBackgroundAfterEnter()
-{
-    if (backgroundImage == null || !isBackgroundEffectActive)
-    {
-        yield break;
+        Debug.Log("[CardUI] Shake completed");
     }
 
-    Debug.Log($"[CardUI] Starting earthquake shake for {shakeDuration}s");
-
-    Vector3 originalPosition = backgroundImage.rectTransform.anchoredPosition;
-    Vector3 originalScale = backgroundImage.rectTransform.localScale;
-
-    float elapsed = 0f;
-
-    while (elapsed < shakeDuration)
+    /// <summary>
+    /// ✅ PHASE 3: TRỞ VỀ MÀU GỐC SAU KHI HOÀN TẤT
+    /// </summary>
+    private IEnumerator RestoreBackgroundColor()
     {
-        // ✅ RUNG MẠNH, GIẢM DẦN
-        float progress = elapsed / shakeDuration;
-        float currentMagnitude = shakeMagnitude * (1f - progress);
+        if (backgroundImage == null || !isBackgroundEffectActive)
+        {
+            yield break;
+        }
 
-        float x = Random.Range(-currentMagnitude, currentMagnitude);
-        float y = Random.Range(-currentMagnitude, currentMagnitude);
+        Debug.Log("[CardUI] Restoring background to original color");
 
-        backgroundImage.rectTransform.anchoredPosition = originalPosition + new Vector3(x, y, 0);
+        float elapsed = 0f;
+        float duration = 0.5f;
+        Color startColor = backgroundImage.color;
 
-        // ✅ ZOOM NHẸ
-        float zoom = 1f + Mathf.Sin(elapsed * 30f) * 0.01f * (1f - progress);
-        backgroundImage.rectTransform.localScale = originalScale * zoom;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
 
-        elapsed += Time.deltaTime;
-        yield return null;
+            backgroundImage.color = Color.Lerp(startColor, originalBackgroundColor, t);
+
+            yield return null;
+        }
+
+        backgroundImage.color = originalBackgroundColor;
+        isBackgroundEffectActive = false;
+
+        Debug.Log("[CardUI] Background restored to normal");
     }
 
-    // ✅ RESET VỊ TRÍ VÀ SCALE
-    backgroundImage.rectTransform.anchoredPosition = originalPosition;
-    backgroundImage.rectTransform.localScale = originalScale;
-
-    Debug.Log("[CardUI] Shake completed");
-}
-
-/// <summary>
-/// ✅ PHASE 3: TRỞ VỀ MÀU GỐC SAU KHI HOÀN TẤT
-/// </summary>
-private IEnumerator RestoreBackgroundColor()
-{
-    if (backgroundImage == null || !isBackgroundEffectActive)
+    /// <summary>
+    /// ✅ HIỆU ỨNG SẤM CHỚP ĐỘNG ĐẤT CHO LEGEND CARD
+    /// </summary>
+    private IEnumerator PlayLegendBackgroundEffect()
     {
-        yield break;
-    }
+        if (backgroundImage == null)
+        {
+            Debug.LogWarning("[CardUI] Background image not assigned!");
+            yield break;
+        }
 
-    Debug.Log("[CardUI] Restoring background to original color");
+        Color originalColor = backgroundImage.color;
+        Vector3 originalPosition = backgroundImage.rectTransform.anchoredPosition;
 
-    float elapsed = 0f;
-    float duration = 0.5f;
-    Color startColor = backgroundImage.color;
+        // ===== 1) FLASH EFFECT (SẤM CHỚP) =====
+        for (int i = 0; i < flashCount; i++)
+        {
+            // Flash sáng
+            backgroundImage.color = flashColor;
+            yield return new WaitForSeconds(flashDuration);
 
-    while (elapsed < duration)
-    {
-        elapsed += Time.deltaTime;
-        float t = elapsed / duration;
-        
-        backgroundImage.color = Color.Lerp(startColor, originalBackgroundColor, t);
-        
-        yield return null;
-    }
+            // Trở về màu gốc
+            backgroundImage.color = originalColor;
+            yield return new WaitForSeconds(flashDuration * 0.5f);
+        }
 
-    backgroundImage.color = originalBackgroundColor;
-    isBackgroundEffectActive = false;
+        // ===== 2) SHAKE EFFECT (ĐỘNG ĐẤT) =====
+        float elapsed = 0f;
 
-    Debug.Log("[CardUI] Background restored to normal");
-}
+        while (elapsed < shakeDuration)
+        {
+            float x = Random.Range(-shakeMagnitude, shakeMagnitude);
+            float y = Random.Range(-shakeMagnitude, shakeMagnitude);
 
-/// <summary>
-/// ✅ HIỆU ỨNG SẤM CHỚP ĐỘNG ĐẤT CHO LEGEND CARD
-/// </summary>
-private IEnumerator PlayLegendBackgroundEffect()
-{
-    if (backgroundImage == null)
-    {
-        Debug.LogWarning("[CardUI] Background image not assigned!");
-        yield break;
-    }
+            backgroundImage.rectTransform.anchoredPosition = originalPosition + new Vector3(x, y, 0);
 
-    Color originalColor = backgroundImage.color;
-    Vector3 originalPosition = backgroundImage.rectTransform.anchoredPosition;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
 
-    // ===== 1) FLASH EFFECT (SẤM CHỚP) =====
-    for (int i = 0; i < flashCount; i++)
-    {
-        // Flash sáng
-        backgroundImage.color = flashColor;
-        yield return new WaitForSeconds(flashDuration);
-
-        // Trở về màu gốc
+        // ===== 3) RESET VỀ VỊ TRÍ GỐC =====
+        backgroundImage.rectTransform.anchoredPosition = originalPosition;
         backgroundImage.color = originalColor;
-        yield return new WaitForSeconds(flashDuration * 0.5f);
     }
-
-    // ===== 2) SHAKE EFFECT (ĐỘNG ĐẤT) =====
-    float elapsed = 0f;
-
-    while (elapsed < shakeDuration)
-    {
-        float x = Random.Range(-shakeMagnitude, shakeMagnitude);
-        float y = Random.Range(-shakeMagnitude, shakeMagnitude);
-
-        backgroundImage.rectTransform.anchoredPosition = originalPosition + new Vector3(x, y, 0);
-
-        elapsed += Time.deltaTime;
-        yield return null;
-    }
-
-    // ===== 3) RESET VỀ VỊ TRÍ GỐC =====
-    backgroundImage.rectTransform.anchoredPosition = originalPosition;
-    backgroundImage.color = originalColor;
-}
 
     /// <summary>
     /// ✅ SETUP LISTENER CHO CÁC BUTTON ĐÃ GÁN SẴN TRONG INSPECTOR
@@ -1051,7 +1051,7 @@ private IEnumerator PlayLegendBackgroundEffect()
             Debug.LogWarning("[CardUI] Cannot use card - cardData is null");
             return;
         }
-ConsumeCardCondition();
+        ConsumeCardCondition();
         // ✅ VALIDATE DOT SKILL COMPONENTS CHO LEGEND CARDS
         if (IsDotSkillCard())
         {
@@ -1189,242 +1189,242 @@ ConsumeCardCondition();
         }
     }
 
-private IEnumerator HandleDotSkillSequence()
-{
-    if (cardData == null || active == null)
+    private IEnumerator HandleDotSkillSequence()
     {
-        Debug.LogError("[CardUI] Cannot handle Dot Skill - missing dependencies");
-        yield break;
-    }
-
-    if (!ValidateDotSkillComponents())
-    {
-        Debug.LogError("[CardUI] Cannot start Dot Skill - missing components!");
-        yield break;
-    }
-
-    // ✅ BẮT ĐẦU NHẤP NHÁY LIÊN TỤC (CHẠY SONG SONG)
-    Coroutine flashCoroutine = StartCoroutine(ContinuousFlashBackground());
-
-    string elementType = cardData.elementTypeCard.ToUpper();
-    int totalDamage = cardData.value;
-
-    if (elementType == "ATTACK_LEGEND")
-    {
-        totalDamage += active.attackP;
-    }
-
-    // ===== RESET =====
-    correctDotCount = 0;
-    currentTimeValue = 1f;
-    damageMultiplier = badMultiplier;
-    timingBonus = badBonus;
-    hasFinishedDotSkill = false;
-
-    GenerateDotArrows();
-    ShowDotSkillUI();
-
-    if (timeSlider != null)
-    {
-        timeSlider.value = 1f;
-        Image fillImage = timeSlider.fillRect?.GetComponent<Image>();
-        if (fillImage != null)
+        if (cardData == null || active == null)
         {
-            fillImage.color = sliderColorNormal;
+            Debug.LogError("[CardUI] Cannot handle Dot Skill - missing dependencies");
+            yield break;
         }
-    }
 
-    if (btnEnter != null)
-    {
-        btnEnter.interactable = false;
-    }
+        if (!ValidateDotSkillComponents())
+        {
+            Debug.LogError("[CardUI] Cannot start Dot Skill - missing components!");
+            yield break;
+        }
 
-    // ===== BẮT ĐẦU MINI-GAME =====
-    isDotSkillActive = true;
-    float timeLeft = dotSkillDuration;
-    float totalTime = dotSkillDuration;
+        // ✅ BẮT ĐẦU NHẤP NHÁY LIÊN TỤC (CHẠY SONG SONG)
+        Coroutine flashCoroutine = StartCoroutine(ContinuousFlashBackground());
 
-    while (timeLeft > 0 && !hasFinishedDotSkill)
-    {
-        timeLeft -= Time.deltaTime;
-        currentTimeValue = timeLeft / totalTime;
+        string elementType = cardData.elementTypeCard.ToUpper();
+        int totalDamage = cardData.value;
+
+        if (elementType == "ATTACK_LEGEND")
+        {
+            totalDamage += active.attackP;
+        }
+
+        // ===== RESET =====
+        correctDotCount = 0;
+        currentTimeValue = 1f;
+        damageMultiplier = badMultiplier;
+        timingBonus = badBonus;
+        hasFinishedDotSkill = false;
+
+        GenerateDotArrows();
+        ShowDotSkillUI();
 
         if (timeSlider != null)
         {
-            timeSlider.value = currentTimeValue;
+            timeSlider.value = 1f;
+            Image fillImage = timeSlider.fillRect?.GetComponent<Image>();
+            if (fillImage != null)
+            {
+                fillImage.color = sliderColorNormal;
+            }
         }
 
-        yield return null;
-    }
-
-    // ✅ SAU KHI NHẤN ENTER → THÊM RUNG LẮC (FLASH VẪN CHẠY)
-    yield return StartCoroutine(ShakeBackgroundAfterEnter());
-
-    // ✅ HIỂN THỊ TIMING TEXT
-    if (!hasFinishedDotSkill)
-    {
-        ShowTimingResult();
-    }
-
-    yield return new WaitForSeconds(0.5f);
-
-    if (blinkCoroutine != null)
-    {
-        StopCoroutine(blinkCoroutine);
-        blinkCoroutine = null;
-    }
-
-    isDotSkillActive = false;
-    HideDotSkillUI();
-
-    yield return new WaitForSeconds(0.3f);
-
-    // ✅ ẨN THẺ TRƯỚC KHI XỬ LÝ
-    if (centerCardImage != null)
-    {
-        GameObject centerCardObj = centerCardImage.gameObject;
-        CanvasGroup cg = centerCardObj.GetComponent<CanvasGroup>();
-        if (cg == null)
-            cg = centerCardObj.AddComponent<CanvasGroup>();
-
-        float t = 0f;
-        float fadeDuration = 0.3f;
-
-        while (t < fadeDuration)
+        if (btnEnter != null)
         {
-            t += Time.deltaTime;
-            cg.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            btnEnter.interactable = false;
+        }
+
+        // ===== BẮT ĐẦU MINI-GAME =====
+        isDotSkillActive = true;
+        float timeLeft = dotSkillDuration;
+        float totalTime = dotSkillDuration;
+
+        while (timeLeft > 0 && !hasFinishedDotSkill)
+        {
+            timeLeft -= Time.deltaTime;
+            currentTimeValue = timeLeft / totalTime;
+
+            if (timeSlider != null)
+            {
+                timeSlider.value = currentTimeValue;
+            }
+
             yield return null;
         }
 
-        cg.alpha = 0f;
-        centerCardObj.SetActive(false);
-        centerCardObj.transform.localScale = Vector3.one;
-    }
+        // ✅ SAU KHI NHẤN ENTER → THÊM RUNG LẮC (FLASH VẪN CHẠY)
+        yield return StartCoroutine(ShakeBackgroundAfterEnter());
 
-    // ===== XỬ LÝ ATTACK_LEGEND_ (PHÁ DOT) =====
-    if (elementType == "ATTACK_LEGEND_")
-    {
-        int dotsToDestroy = correctDotCount + timingBonus;
-        dotsToDestroy = Mathf.Clamp(dotsToDestroy, 1, 7);
-
-        Debug.Log($"[CardUI] ATTACK_LEGEND_: Destroying {dotsToDestroy} dots (Keys: {correctDotCount} + Timing: {timingBonus})");
-
-        if (board != null)
+        // ✅ HIỂN THỊ TIMING TEXT
+        if (!hasFinishedDotSkill)
         {
-            board.ShowItems();
+            ShowTimingResult();
         }
-        
+
+        yield return new WaitForSeconds(0.5f);
+
+        if (blinkCoroutine != null)
+        {
+            StopCoroutine(blinkCoroutine);
+            blinkCoroutine = null;
+        }
+
+        isDotSkillActive = false;
+        HideDotSkillUI();
+
         yield return new WaitForSeconds(0.3f);
 
-        if (board != null)
+        // ✅ ẨN THẺ TRƯỚC KHI XỬ LÝ
+        if (centerCardImage != null)
         {
-            board.DestroyConfiguredDots(cardData.blue, cardData.green, cardData.red, cardData.white, cardData.yellow, dotsToDestroy);
+            GameObject centerCardObj = centerCardImage.gameObject;
+            CanvasGroup cg = centerCardObj.GetComponent<CanvasGroup>();
+            if (cg == null)
+                cg = centerCardObj.AddComponent<CanvasGroup>();
+
+            float t = 0f;
+            float fadeDuration = 0.3f;
+
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                cg.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+                yield return null;
+            }
+
+            cg.alpha = 0f;
+            centerCardObj.SetActive(false);
+            centerCardObj.transform.localScale = Vector3.one;
+        }
+
+        // ===== XỬ LÝ ATTACK_LEGEND_ (PHÁ DOT) =====
+        if (elementType == "ATTACK_LEGEND_")
+        {
+            int dotsToDestroy = correctDotCount + timingBonus;
+            dotsToDestroy = Mathf.Clamp(dotsToDestroy, 1, 7);
+
+            Debug.Log($"[CardUI] ATTACK_LEGEND_: Destroying {dotsToDestroy} dots (Keys: {correctDotCount} + Timing: {timingBonus})");
+
+            if (board != null)
+            {
+                board.ShowItems();
+            }
+
+            yield return new WaitForSeconds(0.3f);
+
+            if (board != null)
+            {
+                board.DestroyConfiguredDots(cardData.blue, cardData.green, cardData.red, cardData.white, cardData.yellow, dotsToDestroy);
+            }
+
+            ClearDotArrows();
+
+            // ✅ DỪNG FLASH & TRỞ VỀ MÀU GỐC
+            if (flashCoroutine != null)
+            {
+                StopCoroutine(flashCoroutine);
+            }
+            yield return StartCoroutine(RestoreBackgroundColor());
+
+            yield break;
+        }
+
+        // ===== XỬ LÝ ATTACK_LEGEND (DAMAGE THƯỜNG) =====
+        int damagePerArrow = totalDamage / 7;
+        int effectiveCorrectCount = Mathf.Max(correctDotCount, 1);
+        int baseDamage = damagePerArrow * effectiveCorrectCount;
+        int finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
+
+        Debug.Log($"[CardUI] ATTACK_LEGEND: {correctDotCount}/7 × {damageMultiplier:F1}x = {finalDamage} damage");
+
+        active.MauNPC = Mathf.Max(active.MauNPC - finalDamage, 0);
+        active.valueCurrent = finalDamage;
+        active.UpdateSlider();
+
+        if (active.playerPetAnimator != null)
+        {
+            active.playerPetAnimator.SetInteger("key", 2);
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        if (active.dameATKPrefad != null)
+        {
+            active.dameATKPrefad.SetActive(true);
+
+            Text dame = active.dameATKPrefad.transform.Find("txtdame")?.GetComponent<Text>();
+            if (dame != null)
+                dame.text = finalDamage.ToString();
+
+            yield return new WaitForSeconds(0.5f);
+            active.dameATKPrefad.SetActive(false);
         }
 
         ClearDotArrows();
-        
+
         // ✅ DỪNG FLASH & TRỞ VỀ MÀU GỐC
         if (flashCoroutine != null)
         {
             StopCoroutine(flashCoroutine);
         }
         yield return StartCoroutine(RestoreBackgroundColor());
-        
-        yield break;
     }
 
-    // ===== XỬ LÝ ATTACK_LEGEND (DAMAGE THƯỜNG) =====
-    int damagePerArrow = totalDamage / 7;
-    int effectiveCorrectCount = Mathf.Max(correctDotCount, 1);
-    int baseDamage = damagePerArrow * effectiveCorrectCount;
-    int finalDamage = Mathf.RoundToInt(baseDamage * damageMultiplier);
 
-    Debug.Log($"[CardUI] ATTACK_LEGEND: {correctDotCount}/7 × {damageMultiplier:F1}x = {finalDamage} damage");
-
-    active.MauNPC = Mathf.Max(active.MauNPC - finalDamage, 0);
-    active.valueCurrent = finalDamage;
-    active.UpdateSlider();
-
-    if (active.playerPetAnimator != null)
+    /// <summary>
+    /// ✅ NHẤP NHÁY LIÊN TỤC TRONG SUỐT QUÁ TRÌNH SỬ DỤNG THẺ
+    /// </summary>
+    private IEnumerator ContinuousFlashBackground()
     {
-        active.playerPetAnimator.SetInteger("key", 2);
-    }
-
-    yield return new WaitForSeconds(1f);
-
-    if (active.dameATKPrefad != null)
-    {
-        active.dameATKPrefad.SetActive(true);
-
-        Text dame = active.dameATKPrefad.transform.Find("txtdame")?.GetComponent<Text>();
-        if (dame != null)
-            dame.text = finalDamage.ToString();
-
-        yield return new WaitForSeconds(0.5f);
-        active.dameATKPrefad.SetActive(false);
-    }
-
-    ClearDotArrows();
-    
-    // ✅ DỪNG FLASH & TRỞ VỀ MÀU GỐC
-    if (flashCoroutine != null)
-    {
-        StopCoroutine(flashCoroutine);
-    }
-    yield return StartCoroutine(RestoreBackgroundColor());
-}
-
-
-/// <summary>
-/// ✅ NHẤP NHÁY LIÊN TỤC TRONG SUỐT QUÁ TRÌNH SỬ DỤNG THẺ
-/// </summary>
-private IEnumerator ContinuousFlashBackground()
-{
-    if (backgroundImage == null)
-    {
-        Debug.LogWarning("[CardUI] Background image not assigned!");
-        yield break;
-    }
-
-    isBackgroundEffectActive = true;
-
-    Debug.Log($"[CardUI] Starting continuous flash (Smooth: {smoothTransition})");
-
-    bool isWhite = true;
-
-    // ✅ CHẠY VÔ HẠN CHO ĐẾN KHI BỊ STOP
-    while (true)
-    {
-        Color targetColor = isWhite ? whiteContrastColor : blackContrastColor;
-        
-        if (smoothTransition)
+        if (backgroundImage == null)
         {
-            // ✅ CHUYỂN MƯỢT
-            float elapsed = 0f;
-            Color startColor = backgroundImage.color;
+            Debug.LogWarning("[CardUI] Background image not assigned!");
+            yield break;
+        }
 
-            while (elapsed < contrastTransitionTime)
+        isBackgroundEffectActive = true;
+
+        Debug.Log($"[CardUI] Starting continuous flash (Smooth: {smoothTransition})");
+
+        bool isWhite = true;
+
+        // ✅ CHẠY VÔ HẠN CHO ĐẾN KHI BỊ STOP
+        while (true)
+        {
+            Color targetColor = isWhite ? whiteContrastColor : blackContrastColor;
+
+            if (smoothTransition)
             {
-                elapsed += Time.deltaTime;
-                float t = elapsed / contrastTransitionTime;
-                
-                backgroundImage.color = Color.Lerp(startColor, targetColor, t);
-                
-                yield return null;
-            }
-        }
-        else
-        {
-            // ✅ FLASH GẤP
-            backgroundImage.color = targetColor;
-            yield return new WaitForSeconds(contrastTransitionTime);
-        }
+                // ✅ CHUYỂN MƯỢT
+                float elapsed = 0f;
+                Color startColor = backgroundImage.color;
 
-        // Đổi màu
-        isWhite = !isWhite;
+                while (elapsed < contrastTransitionTime)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = elapsed / contrastTransitionTime;
+
+                    backgroundImage.color = Color.Lerp(startColor, targetColor, t);
+
+                    yield return null;
+                }
+            }
+            else
+            {
+                // ✅ FLASH GẤP
+                backgroundImage.color = targetColor;
+                yield return new WaitForSeconds(contrastTransitionTime);
+            }
+
+            // Đổi màu
+            isWhite = !isWhite;
+        }
     }
-}
     /// <summary>
     /// ✅ XỬ LÝ KHI NHẤN ENTER - HOÀN TẤT MINI-GAME
     /// </summary>
@@ -1776,38 +1776,46 @@ private IEnumerator ContinuousFlashBackground()
     }
 
     /// <summary>
-/// ✅ TRỪ CONDITION SAU KHI SỬ DỤNG CARD THÀNH CÔNG
-/// </summary>
-private void ConsumeCardCondition()
-{
-    if (cardData == null || active == null) return;
-
-    string elementType = cardData.elementTypeCard.ToUpper();
-
-    // ✅ LEGEND CARDS: Trừ Power
-    if (elementType == "ATTACK_LEGEND" || elementType == "ATTACK_LEGEND_")
+    /// ✅ TRỪ CONDITION SAU KHI SỬ DỤNG CARD THÀNH CÔNG
+    /// </summary>
+    private void ConsumeCardCondition()
     {
-        if (cardData.power > 0)
+        if (cardData == null || active == null) return;
+
+        string elementType = cardData.elementTypeCard.ToUpper();
+
+        // ⭐ LEGEND CARDS: TRỪ CẢ POWER VÀ MANA
+        if (elementType == "ATTACK_LEGEND" || elementType == "ATTACK_LEGEND_")
         {
-            active.NoPlayer = (int)Mathf.Max(active.NoPlayer - cardData.power, 0);
-            Debug.Log($"[CardUI] Consumed {cardData.power} Power. Remaining: {active.NoPlayer}");
-            
+            // Trừ Power (Nộ)
+            if (cardData.power > 0)
+            {
+                active.NoPlayer = (int)Mathf.Max(active.NoPlayer - cardData.power, 0);
+                Debug.Log($"[CardUI] Consumed {cardData.power} Power. Remaining: {active.NoPlayer}");
+            }
+
+            // ⭐ TRỪ THÊM MANA (QUAN TRỌNG!)
+            if (cardData.conditionUse > 0)
+            {
+                active.ManaPlayer = (int)Mathf.Max(active.ManaPlayer - cardData.conditionUse, 0);
+                Debug.Log($"[CardUI] Consumed {cardData.conditionUse} Mana. Remaining: {active.ManaPlayer}");
+            }
+
+            // ✅ Cập nhật UI
+            active.UpdateSlider();
+            return;
+        }
+
+        // ⭐ NORMAL CARDS: CHỈ TRỪ MANA
+        if (cardData.conditionUse > 0)
+        {
+            active.ManaPlayer = (int)Mathf.Max(active.ManaPlayer - cardData.conditionUse, 0);
+            Debug.Log($"[CardUI] Consumed {cardData.conditionUse} Mana. Remaining: {active.ManaPlayer}");
+
             // ✅ Cập nhật UI
             active.UpdateSlider();
         }
-        return;
     }
-
-    // ✅ NORMAL CARDS: Trừ Mana
-    if (cardData.conditionUse > 0)
-    {
-        active.ManaPlayer = (int)Mathf.Max(active.ManaPlayer - cardData.conditionUse, 0);
-        Debug.Log($"[CardUI] Consumed {cardData.conditionUse} Mana. Remaining: {active.ManaPlayer}");
-        
-        // ✅ Cập nhật UI
-        active.UpdateSlider();
-    }
-}
 
     private IEnumerator CallAPIUseCard()
     {
@@ -1869,14 +1877,35 @@ private void ConsumeCardCondition()
 
         string elementType = cardData.elementTypeCard.ToUpper();
 
+        // ⭐ LEGEND CARDS: CHECK CẢ POWER VÀ MANA
         if (elementType == "ATTACK_LEGEND" || elementType == "ATTACK_LEGEND_")
         {
-            if (active.NoPlayer < cardData.power) return false;
+            // Check Power (Nộ)
+            if (cardData.power > 0 && active.NoPlayer < cardData.power)
+            {
+                Debug.LogWarning($"[CheckConditionUse] Not enough Power! Need {cardData.power}, have {active.NoPlayer}");
+                return false;
+            }
+
+            // ⭐ CHECK THÊM MANA (QUAN TRỌNG!)
+            if (cardData.conditionUse > 0 && active.ManaPlayer < cardData.conditionUse)
+            {
+                Debug.LogWarning($"[CheckConditionUse] Not enough Mana! Need {cardData.conditionUse}, have {active.ManaPlayer}");
+                return false;
+            }
+
+            Debug.Log($"[CheckConditionUse] Legend card OK - Power: {active.NoPlayer}/{cardData.power}, Mana: {active.ManaPlayer}/{cardData.conditionUse}");
             return true;
         }
 
+        // ⭐ NORMAL CARDS: CHỈ CHECK MANA
         if (cardData.conditionUse <= 0) return true;
-        if (active.ManaPlayer < cardData.conditionUse) return false;
+
+        if (active.ManaPlayer < cardData.conditionUse)
+        {
+            Debug.LogWarning($"[CheckConditionUse] Not enough Mana! Need {cardData.conditionUse}, have {active.ManaPlayer}");
+            return false;
+        }
 
         return true;
     }

@@ -75,7 +75,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 0.8
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -96,7 +96,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 8192
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -153,12 +153,12 @@ TextureImporter:
       name: 2_76x62_0
       rect:
         serializedVersion: 2
-        x: 10
-        y: 127
-        width: 67
-        height: 59
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 124
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -175,12 +175,12 @@ TextureImporter:
       name: 2_76x62_1
       rect:
         serializedVersion: 2
-        x: 86
-        y: 127
-        width: 67
-        height: 59
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 76
+        y: 124
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -197,12 +197,12 @@ TextureImporter:
       name: 2_76x62_2
       rect:
         serializedVersion: 2
-        x: 158
-        y: 127
-        width: 68
-        height: 59
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 152
+        y: 124
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -219,12 +219,12 @@ TextureImporter:
       name: 2_76x62_3
       rect:
         serializedVersion: 2
-        x: 6
-        y: 65
-        width: 68
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 62
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -241,12 +241,12 @@ TextureImporter:
       name: 2_76x62_4
       rect:
         serializedVersion: 2
-        x: 80
-        y: 65
-        width: 67
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 76
+        y: 62
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -263,12 +263,12 @@ TextureImporter:
       name: 2_76x62_5
       rect:
         serializedVersion: 2
-        x: 156
-        y: 65
-        width: 67
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 152
+        y: 62
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -285,12 +285,12 @@ TextureImporter:
       name: 2_76x62_6
       rect:
         serializedVersion: 2
-        x: 4
-        y: 3
-        width: 67
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 0
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -307,12 +307,12 @@ TextureImporter:
       name: 2_76x62_7
       rect:
         serializedVersion: 2
-        x: 86
-        y: 3
-        width: 67
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 76
+        y: 0
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -329,12 +329,12 @@ TextureImporter:
       name: 2_76x62_8
       rect:
         serializedVersion: 2
-        x: 162
-        y: 3
-        width: 66
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 152
+        y: 0
+        width: 76
+        height: 62
+      alignment: 9
+      pivot: {x: 0.6310142, y: 0.985402}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -351,7 +351,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: ea1c17a77f2378843b4bbaf13a63321e
     internalID: 0
     vertices: []
     indices: 

@@ -6,7 +6,7 @@ public class APIConfig : MonoBehaviour
     private static string DOMAIN = "pokiguard.online";
 
     private static string BASE_URL = "https://"+ DOMAIN;
-    public static string VERSION = "1.0.0";
+    public static string VERSION = "1.0.1";
     public static string SOCKET = "wss://"+ DOMAIN + "/ws-chat";
 
     // GET APIs

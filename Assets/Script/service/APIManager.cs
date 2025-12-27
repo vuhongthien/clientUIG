@@ -115,41 +115,62 @@ public class APIManager : MonoBehaviour
         }
     }
 
-    public IEnumerator PostRequestRaw(string url, object data, Action<string> onSuccess, Action<string> onError)
+public IEnumerator PostRequestRaw(string url, object data, Action<string> onSuccess, Action<string> onError)
+{
+    string jsonData = "";
+    if (data != null)
     {
-        string jsonData = "";
-        if (data != null)
+        jsonData = JsonUtility.ToJson(data);
+    }
+
+    // ✅ DEBUG: Log URL và Data
+    Debug.Log($"[APIManager] PostRequestRaw URL: {url}");
+    Debug.Log($"[APIManager] PostRequestRaw Data: {jsonData}");
+
+    using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+    {
+        if (!string.IsNullOrEmpty(jsonData))
         {
-            jsonData = JsonUtility.ToJson(data);
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         }
 
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
 
-        using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+        // ✅ DEBUG: Log trước khi gửi
+        Debug.Log($"[APIManager] Sending POST request...");
+
+        yield return request.SendWebRequest();
+
+        // ✅ DEBUG: Log response code
+        Debug.Log($"[APIManager] Response Code: {request.responseCode}");
+        Debug.Log($"[APIManager] Result: {request.result}");
+
+        if (request.result == UnityWebRequest.Result.Success)
         {
-            if (!string.IsNullOrEmpty(jsonData))
-            {
-                byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            }
-
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                string responseText = request.downloadHandler.text;
-                onSuccess?.Invoke(responseText);
-            }
-            else
-            {
-                string error = request.error;
-                onError?.Invoke(request.downloadHandler.text);
-
-            }
+            string responseText = request.downloadHandler.text;
+            
+            // ✅ DEBUG: Log response
+            Debug.Log($"[APIManager] ✓ Success Response: {responseText}");
+            
+            onSuccess?.Invoke(responseText);
+        }
+        else
+        {
+            string error = request.error;
+            string responseBody = request.downloadHandler.text;
+            
+            // ✅ DEBUG: Log lỗi chi tiết
+            Debug.LogError($"[APIManager] ✗ Request Failed!");
+            Debug.LogError($"[APIManager] Error: {error}");
+            Debug.LogError($"[APIManager] Response Code: {request.responseCode}");
+            Debug.LogError($"[APIManager] Response Body: {responseBody}");
+            
+            onError?.Invoke(responseBody);
         }
     }
+}
 
     public IEnumerator PostRequest<T>(string url, object body, Action<T> onSuccess, Action<string> onError)
     {

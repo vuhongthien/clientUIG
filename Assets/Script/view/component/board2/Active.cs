@@ -169,20 +169,19 @@ public class Active : MonoBehaviour
     }
 
     void Start()
-    {
-        apiLoadRoom = FindFirstObjectByType<ApiLoadRoom>();
-        effect = FindFirstObjectByType<Effect>();
+{
+    apiLoadRoom = FindFirstObjectByType<ApiLoadRoom>();
+    effect = FindFirstObjectByType<Effect>();
 
-        int petUser = PlayerPrefs.GetInt("petUser");
-        int petEnemy = PlayerPrefs.GetInt("petEnemy");
+    int petUser = PlayerPrefs.GetInt("petUser");
+    int petEnemy = PlayerPrefs.GetInt("petEnemy");
 
-        // Đăng ký internal events
-        OnTurnStart += HandleTurnStartInternal;
-        OnTurnEndInternal += HandleTurnEndInternal;
+    // Đăng ký internal events
+    OnTurnStart += HandleTurnStartInternal;
+    OnTurnEndInternal += HandleTurnEndInternal;
 
-        // Bắt đầu game sau khi setup
-        StartCoroutine(WaitAndStartGame());
-    }
+    // ✅ KHÔNG CẦN GÌ THÊM - Chờ Board.OnBoardReady() gọi
+}
 
     IEnumerator WaitAndStartGame()
     {
@@ -294,18 +293,38 @@ public class Active : MonoBehaviour
     {
         yield return new WaitForSeconds(turnTransitionDelay);
 
-        // Công thức: NextTurnIndex = (CurrentTurnIndex + 1) % TotalEntities
         int previousIndex = currentTurnIndex;
         currentTurnIndex = (currentTurnIndex + 1) % totalEntities;
 
-        // Nếu quay lại player (index 0), tăng số lượt
         if (currentTurnIndex == 0)
         {
             turnNumber++;
         }
 
+        // ✅ THÊM: TRỪ NĂNG LƯỢNG KHI KẾT THÚC TURN PLAYER
+        if (previousIndex == 0 && ManagerMatch.Instance != null)
+        {
+            int currentValue = int.Parse(ManagerMatch.Instance.txtNLUser.text);
+            currentValue--;
+            ManagerMatch.Instance.txtNLUser.text = currentValue.ToString();
 
-        // Bắt đầu turn mới
+            int userId = PlayerPrefs.GetInt("userId", 1);
+            StartCoroutine(APIManager.Instance.GetRequest<UserDTO>(
+                APIConfig.DOWN_ENERGY(userId),
+                null,
+                (error) => Debug.LogError($"[Active] Lỗi trừ năng lượng: {error}")
+            ));
+
+            // Kiểm tra năng lượng
+            if (board != null && currentValue <= 0)
+            {
+                board.StartCoroutine(board.GetType()
+                    .GetMethod("ShowEnergyWarningAndReturn",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    .Invoke(board, new object[] { "Bạn đã hết năng lượng!", true }) as IEnumerator);
+            }
+        }
+
         StartTurnInternal();
     }
 
@@ -1337,4 +1356,77 @@ public class Active : MonoBehaviour
 
         UpdateSlider();
     }
+
+    public void OnBoardReady()
+{
+    Debug.Log("[Active] Board ready, showing YOUR TURN first!");
+    StartCoroutine(ShowYourTurnThenStartGame());
+}
+
+private IEnumerator ShowYourTurnThenStartGame()
+{
+    // ✅ 1. HIỂN THỊ "YOUR TURN"
+    if (board != null && board.txtYourTurn != null)
+    {
+        board.txtYourTurn.SetActive(true);
+        
+        // Đảm bảo chữ luôn nằm trên cùng
+        var turnCanvas = board.txtYourTurn.GetComponent<Canvas>();
+        if (turnCanvas == null) turnCanvas = board.txtYourTurn.AddComponent<Canvas>();
+        turnCanvas.overrideSorting = true;
+        turnCanvas.sortingOrder = 99;
+        
+        // Chạy hiệu ứng chữ
+        if (board.yourTurnEffect != null)
+        {
+            yield return StartCoroutine(board.yourTurnEffect.PlayEffect());
+        }
+        else
+        {
+            yield return new WaitForSeconds(1.5f); // Fallback nếu không có effect
+        }
+        
+        board.txtYourTurn.SetActive(false);
+    }
+    
+    yield return new WaitForSeconds(0.2f);
+    
+    // ✅ 2. HIỂN THỊ BOARD (FADE IN TẤT CẢ VIÊN)
+    if (board != null && board.allDots != null)
+    {
+        for (int i = 0; i < board.width; i++)
+        {
+            for (int j = 0; j < board.height; j++)
+            {
+                if (board.allDots[i, j] != null)
+                {
+                    GameObject dot = board.allDots[i, j];
+                    dot.SetActive(true);
+                    
+                    // Fade in effect
+                    SpriteRenderer sr = dot.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                    {
+                        Color c = sr.color;
+                        c.a = 0f;
+                        sr.color = c;
+                        LeanTween.alpha(dot, 1f, 0.3f)
+                            .setDelay(i * 0.02f + j * 0.02f)
+                            .setEaseOutQuad();
+                    }
+                    else
+                    {
+                        dot.SetActive(true);
+                    }
+                }
+            }
+        }
+    }
+    
+    yield return new WaitForSeconds(0.5f);
+    
+    // ✅ 3. BẮT ĐẦU GAME
+    Debug.Log("[Active] Starting game after YOUR TURN!");
+    StartGame();
+}
 }

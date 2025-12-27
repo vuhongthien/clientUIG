@@ -139,7 +139,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -172,14 +172,46 @@ MonoBehaviour:
   placeholderColor: {r: 0.2981131, g: 0.2981131, b: 0.2981131, a: 1}
   animationDuration: 1
   centerCardScale: 2
-  centerCardSize: {x: 70, y: 85}
   imgtCard: {fileID: 2965973212217790799}
-  auditionSlider: {fileID: 0}
-  arrowPanel: {fileID: 0}
-  groupDot: {fileID: 0}
+  dotSkillPanel: {fileID: 0}
   arrowPrefab: {fileID: 0}
-  arrowParentPanel: {fileID: 0}
-  boardObj: {fileID: 0}
+  dotSkillDuration: 5
+  timeSlider: {fileID: 0}
+  sliderColorNormal: {r: 0, g: 1, b: 0, a: 1}
+  sliderColorWarning: {r: 1, g: 0, b: 0, a: 1}
+  warningThreshold: 0.3
+  timingText: {fileID: 0}
+  perfectColor: {r: 0.6, g: 0.2, b: 0.8, a: 1}
+  goodColor: {r: 1, g: 0, b: 0, a: 1}
+  badColor: {r: 0, g: 1, b: 0, a: 1}
+  perfectMultiplier: 1.5
+  goodMultiplier: 1.2
+  badMultiplier: 0.8
+  btnUp: {fileID: 0}
+  btnDown: {fileID: 0}
+  btnLeft: {fileID: 0}
+  btnRight: {fileID: 0}
+  btnEnter: {fileID: 0}
+  perfectStartTime: 3
+  perfectEndTime: 3.3
+  goodStart1Time: 2.5
+  goodEnd1Time: 3
+  goodStart2Time: 3.3
+  goodEnd2Time: 4.2
+  perfectBonus: 4
+  goodBonus: 2
+  badBonus: 0
+  backgroundImage: {fileID: 0}
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashCount: 3
+  flashDuration: 0.15
+  shakeMagnitude: 10
+  shakeDuration: 0.5
+  useWhiteContrast: 1
+  whiteContrastColor: {r: 0.95, g: 0.95, b: 0.95, a: 1}
+  blackContrastColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+  contrastTransitionTime: 0.05
+  smoothTransition: 0
 --- !u!114 &5231116240971238452
 MonoBehaviour:
   m_ObjectHideFlags: 0

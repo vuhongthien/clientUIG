@@ -10,9 +10,6 @@ public class ManagerDauTruong : MonoBehaviourPunCallbacks
     public Text txtCt;
     public Text txtNl; // Giữ lại để fallback
     
-    // ✅ THÊM
-    public EnergyManager energyManager;
-    
     public string txtLvUser;
     public string txtName;
     public string petId;

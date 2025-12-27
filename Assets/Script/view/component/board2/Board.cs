@@ -146,6 +146,12 @@ public class Board : MonoBehaviour
     private int lastCheckedEnergy = -1;
     [Header("Audio Settings")]
     private AudioSettingsManager audioSettingsManager;
+    [Header("Background Settings")]
+    public Image boardBackground;
+    [Header("Board State")]
+    private bool isBoardReady = false; // ✅ THÊM BIẾN NÀY
+
+    public bool IsBoardReady => isBoardReady; // ✅ THÊM PROPERTY NÀY
 
     public static Board Instance { get; private set; }
 
@@ -158,6 +164,46 @@ public class Board : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    /// <summary>
+    /// ✅ LOAD BACKGROUND THEO GROUP INDEX
+    /// </summary>
+    private void LoadGroupBackground()
+    {
+        if (boardBackground == null)
+        {
+            Debug.LogWarning("[Board] Board background Image not assigned!");
+            return;
+        }
+
+        string bgPath;
+
+        // ✅ BOSS THẾ GIỚI: Load background đặc biệt
+        if (isBossBattle)
+        {
+            bgPath = "Image/groupBG/group5";
+            Debug.Log("[Board] Loading Boss World background");
+        }
+        else
+        {
+            // PVP: Load theo group index
+            int groupIndex = PlayerPrefs.GetInt("SelectedGroupIndex", 0);
+            bgPath = $"Image/groupBG/group{groupIndex}";
+            Debug.Log($"[Board] Loading PVP background for group {groupIndex}");
+        }
+
+        Sprite bgSprite = Resources.Load<Sprite>(bgPath);
+
+        if (bgSprite != null)
+        {
+            boardBackground.sprite = bgSprite;
+            Debug.Log($"[Board] ✓ Loaded background: {bgPath}");
+        }
+        else
+        {
+            Debug.LogWarning($"[Board] Background not found at: {bgPath}");
         }
     }
 
@@ -196,8 +242,10 @@ public class Board : MonoBehaviour
     /// </summary>
     public void InitializeCards()
     {
+        LoadGroupBackground();
         // ✅ KIỂM TRA BOSS BATTLE
         isBossBattle = PlayerPrefs.GetString("IsBossBattle", "false") == "true";
+        Debug.Log($"[Board] IsBossBattle: {isBossBattle}");
 
         // ✅ Load enemy pet info - ƯU TIÊN BOSS ELEMENT NẾU CÓ
         if (isBossBattle && PlayerPrefs.HasKey("BossElementType"))
@@ -254,25 +302,33 @@ public class Board : MonoBehaviour
         allDots = new GameObject[width, height];
         StartCoroutine(setUp());
 
-        // Load card huyền thoại từ API
-        if (cardData != null)
+        if (cardContainer != null)
         {
-            CreateCardHT(cardData);
+            cardContainer.gameObject.SetActive(!isBossBattle);
         }
 
-        // Load cards thường từ PlayerPrefs
-        LoadCardsFromPlayerPrefs();
+        // Load cards như bình thường (sẽ không hiện nếu container đã bị ẩn)
+        if (!isBossBattle)
+        {
+            if (cardData != null)
+            {
+                CreateCardHT(cardData);
+            }
+            LoadCardsFromPlayerPrefs();
+        }
     }
 
     void Update()
     {
-        // ✅ THÊM kiểm tra isProcessingUI
+        // ✅ THÊM CHECK isGameOver
+        if (isGameOver) return;
+
         if (enableAutoMove &&
             active != null &&
             active.IsNPCTurn &&
-            active.IsTurnInProgress &&  // ✅ THÊM: Kiểm tra turn đang active
+            active.IsTurnInProgress &&
             !isAutoMoveInProgress &&
-            !isProcessingUI &&  // ✅ Đảm bảo không xử lý UI
+            !isProcessingUI &&
             !hasDestroyedThisTurn &&
             currentState == GameState.move &&
             Time.time - lastAutoMoveTime >= AUTO_MOVE_COOLDOWN)
@@ -313,39 +369,36 @@ public class Board : MonoBehaviour
         imgTurnP.SetActive(isPlayer);
         imgTurnE.SetActive(!isPlayer);
 
-
         if (isPlayer)
         {
-            // Khóa gameplay ngay lập tức
-            if (active != null) active.PauseTurn();
-            currentState = GameState.wait;
+            // ✅ TURN ĐẦU TIÊN: Không hiển thị YOUR TURN nữa (đã hiện lúc đầu)
+            // ✅ CÁC TURN SAU: Vẫn hiển thị bình thường
 
-            // Ẩn toàn bộ viên để chỉ thấy chữ YOUR TURN
-            HideAllItems();
+            if (active != null && active.TurnNumber > 1) // Chỉ hiện từ turn 2 trở đi
+            {
+                if (active != null) active.PauseTurn();
+                currentState = GameState.wait;
+                HideAllItems();
 
-            // Đảm bảo chữ luôn nằm trên cùng
-            var turnCanvas = txtYourTurn.GetComponent<Canvas>();
-            if (turnCanvas == null) turnCanvas = txtYourTurn.AddComponent<Canvas>();
-            turnCanvas.overrideSorting = true;
-            turnCanvas.sortingOrder = 99;
+                var turnCanvas = txtYourTurn.GetComponent<Canvas>();
+                if (turnCanvas == null) turnCanvas = txtYourTurn.AddComponent<Canvas>();
+                turnCanvas.overrideSorting = true;
+                turnCanvas.sortingOrder = 99;
 
-            txtYourTurn.SetActive(true);
+                txtYourTurn.SetActive(true);
 
-            // Chạy hiệu ứng chữ (nên dùng UnscaledTime trong YourTurnEffect)
-            if (yourTurnEffect != null)
-                yield return StartCoroutine(yourTurnEffect.PlayEffect());
+                if (yourTurnEffect != null)
+                    yield return StartCoroutine(yourTurnEffect.PlayEffect());
 
-            // Hết hiệu ứng → ẩn chữ, hiện lại board, mở gameplay + countdown
-            txtYourTurn.SetActive(false);
-            ShowItems();
+                txtYourTurn.SetActive(false);
+                ShowItems();
+            }
+
             currentState = GameState.move;
-
-            if (active != null) active.ResumeTurn(); // ⭐ Lúc này mới bắt đầu đếm
+            if (active != null) active.ResumeTurn();
         }
         else
         {
-            // Lượt NPC: không cần chữ, nhưng vì Active không auto-start timer nữa
-            // nên phải resume ngay để đếm thời gian NPC
             txtYourTurn.SetActive(false);
             if (active != null) active.ResumeTurn();
         }
@@ -697,6 +750,9 @@ public class Board : MonoBehaviour
                 dot.transform.parent = this.transform;
                 dot.name = "(" + i + "," + j + ")";
                 allDots[i, j] = dot;
+
+                // ✅ ẨN TẤT CẢ VIÊN NGAY SAU KHI TẠO
+                dot.SetActive(false);
             }
         }
 
@@ -708,6 +764,13 @@ public class Board : MonoBehaviour
         yield return StartCoroutine(FadeOut(canvasGroup, 0.5f));
 
         loading.SetActive(false);
+        isBoardReady = true;
+
+        // ✅ GỌI OnBoardReady - NHƯNG CHƯA HIỆN BOARD
+        if (active != null)
+        {
+            active.OnBoardReady();
+        }
     }
 
     private bool MatchesAt(int column, int row, GameObject piece)
@@ -1161,8 +1224,39 @@ public class Board : MonoBehaviour
         }
 
         displayDestroy();
+
+        // ✅ KIỂM TRA NƯỚC ĐI SAU KHI STABLE
+        if (!HasValidMoves())
+        {
+            Debug.Log("[Board] Phát hiện không còn nước đi!");
+            yield return StartCoroutine(ResetBoardWhenNoMoves());
+        }
+
         yield return HandleUI();
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("Check Valid Moves")]
+    private void DebugCheckValidMoves()
+    {
+        if (!Application.isPlaying) return;
+
+        bool hasMove = HasValidMoves();
+        Debug.Log($"[Board] Có nước đi hợp lệ: {hasMove}");
+
+        if (!hasMove)
+        {
+            StartCoroutine(ResetBoardWhenNoMoves());
+        }
+    }
+
+    [ContextMenu("Force Reset Board")]
+    private void DebugForceReset()
+    {
+        if (!Application.isPlaying) return;
+        StartCoroutine(ResetBoardWhenNoMoves());
+    }
+#endif
 
     private void displayDestroy()
     {
@@ -1208,7 +1302,10 @@ public class Board : MonoBehaviour
 
         isProcessingUI = true;
         active.PauseTurn();
-        HideAllItems();
+        if (!isGameOver)
+        {
+            HideAllItems();
+        }
 
         // ===== 1) THU THẬP DỮ LIỆU =====
         List<Transform> itemsToProcess = new List<Transform>();
@@ -1357,30 +1454,17 @@ public class Board : MonoBehaviour
             hasDestroyedThisTurn = false;
             currentState = GameState.move;
 
-            yield return StartCoroutine(ShowGameResultIntegrated(npcDead));
-            yield break;
-        }
-
-        // ===== 9) API & TURN TRANSITION =====
-        if (active != null && active.IsPlayerTurn)
-        {
-            int currentValue = int.Parse(ManagerMatch.Instance.txtNLUser.text);
-            currentValue--;
-            ManagerMatch.Instance.txtNLUser.text = currentValue.ToString();
-
-            int userId = PlayerPrefs.GetInt("userId", 1);
-            yield return APIManager.Instance.GetRequest<UserDTO>(
-                APIConfig.DOWN_ENERGY(userId),
-                null,
-                OnError
-            );
-
-            // ✅ Kiểm tra năng lượng sau khi trừ
-            if (!CheckEnergyAndShowWarning())
+            // ✅ KIỂM TRA CẢ 2 CÙNG CHẾT (SYNC ERROR)
+            if (playerDead && npcDead)
             {
-                // Hết năng lượng → Dừng xử lý, đợi về QuangTruong
+                Debug.LogWarning("[Board] CẢ 2 CÙNG CHẾT - Server chưa đồng bộ!");
+                yield return StartCoroutine(ShowSyncErrorWarning());
                 yield break;
             }
+
+            // Trường hợp bình thường: 1 bên thắng, 1 bên thua
+            yield return StartCoroutine(ShowGameResultIntegrated(npcDead));
+            yield break;
         }
 
         int nextIndex = active.IsPlayerTurn ? 1 : 0;
@@ -1408,6 +1492,99 @@ public class Board : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// ✅ HIỂN THỊ THÔNG BÁO LỖI ĐỒNG BỘ (CẢ 2 CÙNG CHẾT)
+    /// </summary>
+    private IEnumerator ShowSyncErrorWarning()
+    {
+        if (energyWarningPanel == null)
+        {
+            // Fallback: Về luôn nếu không có panel
+            yield return new WaitForSeconds(1f);
+            ReturnToQuangTruong();
+            yield break;
+        }
+
+        // ✅ DỪNG HOÀN TOÀN GAME
+        isGameOver = true;
+        currentState = GameState.wait;
+        enableAutoMove = false;
+
+        if (active != null)
+        {
+            active.PauseTurn();
+            active.StopAllCoroutines();
+        }
+
+        // ✅ HIỂN THỊ PANEL
+        energyWarningPanel.SetActive(true);
+
+        // ✅ SET TEXT
+        if (energyWarningText != null)
+        {
+            energyWarningText.text = "Server chưa đồng bộ!\nVui lòng thử lại sau.";
+        }
+
+        // ✅ SETUP BUTTON
+        if (energyWarningButton != null)
+        {
+            energyWarningButton.onClick.RemoveAllListeners();
+
+            // Button về QuangTruong/Menu
+            energyWarningButton.onClick.AddListener(() =>
+            {
+                energyWarningPanel.SetActive(false);
+                ReturnToQuangTruongFromSync();
+            });
+
+            Text btnText = energyWarningButton.GetComponentInChildren<Text>();
+            if (btnText != null)
+            {
+                btnText.text = "Quay về";
+            }
+        }
+
+        // ✅ ANIMATION PANEL
+        CanvasGroup cg = energyWarningPanel.GetComponent<CanvasGroup>();
+        if (cg == null)
+        {
+            cg = energyWarningPanel.AddComponent<CanvasGroup>();
+        }
+
+        cg.alpha = 0f;
+        LeanTween.alphaCanvas(cg, 1f, 0.3f).setIgnoreTimeScale(true);
+
+    }
+
+    /// <summary>
+    /// ✅ TRỞ VỀ SAU KHI LỖI ĐỒNG BỘ
+    /// </summary>
+    private void ReturnToQuangTruongFromSync()
+    {
+        Time.timeScale = 1f;
+
+        Debug.Log("[Board] Quay về do lỗi đồng bộ");
+
+        // ✅ XÓA FLAGS NẾU CẦN
+        if (isBossBattle)
+        {
+            PlayerPrefs.SetString("IsBossBattle", "false");
+            PlayerPrefs.DeleteKey("BossElementType");
+        }
+
+        PlayerPrefs.Save();
+
+        // ✅ VỀ SCENE TRƯỚC ĐÓ HOẶC QUẢNG TRƯỜNG
+        if (ManagerGame.Instance != null)
+        {
+            ManagerGame.Instance.BackScene();
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("QuangTruong");
+        }
+    }
+
     // ==================== INTEGRATED GAME RESULT SYSTEM ====================
 
     public IEnumerator ShowGameResultIntegrated(bool playerWon)
@@ -1417,8 +1594,22 @@ public class Board : MonoBehaviour
             yield break;
         }
 
+        // ✅ DỪNG GAMEPLAY NGAY LẬP TỨC
         isGameOver = true;
+        currentState = GameState.wait; // ✅ QUAN TRỌNG
+        isProcessingUI = false;
+        isAutoMoveInProgress = false;
+        hasDestroyedThisTurn = false;
+        enableAutoMove = false; // ✅ TẮT AI
+
         int turnCount = active != null ? active.TurnNumber : 0;
+
+        // ✅ PAUSE TURN + DỪNG TIMER
+        if (active != null)
+        {
+            active.PauseTurn();
+            active.StopAllCoroutines(); // ✅ Dừng mọi coroutine trong Active
+        }
 
         panelResult.SetActive(true);
 
@@ -1505,6 +1696,7 @@ public class Board : MonoBehaviour
         // ✅ 7. GỬI DAMAGE LÊN SERVER (CHỈ BOSS)
         if (isBossBattle)
         {
+            Debug.Log("[Board] GỬI DAMAGE LÊN SERVER");
             yield return StartCoroutine(SubmitBossDamage(playerWon, turnCount));
         }
 
@@ -1567,7 +1759,7 @@ public class Board : MonoBehaviour
             userId = userId,
             bossScheduleId = bossScheduleId,
             damageDealt = totalDamage,
-            isVictory = playerWon,
+            victory = playerWon,
             turnCount = turnCount
         };
 
@@ -2231,6 +2423,9 @@ public class Board : MonoBehaviour
 
     public bool IsPlayerAllowedToMove()
     {
+        // ✅ THÊM CHECK isGameOver
+        if (isGameOver) return false;
+
         if (active == null || Active.Instance == null)
             return false;
 
@@ -2268,12 +2463,21 @@ public class Board : MonoBehaviour
 
     public void HideAllItems()
     {
+        // ✅ KIỂM TRA allDots đã được tạo chưa
+        if (allDots == null)
+        {
+            Debug.LogWarning("[Board] Board chưa sẵn sàng!");
+            return; // Thoát ra, không làm gì cả
+        }
+
         foreach (GameObject item in allDots)
         {
             if (item != null)
                 item.SetActive(false);
         }
-        destructionCountPanel.SetActive(true);
+
+        if (destructionCountPanel != null)
+            destructionCountPanel.SetActive(true);
     }
 
     public IEnumerator HideAllItemsEnd()
@@ -2291,6 +2495,13 @@ public class Board : MonoBehaviour
 
     public void ShowItems()
     {
+        // ✅ KIỂM TRA allDots đã được tạo chưa
+        if (allDots == null)
+        {
+            Debug.LogWarning("[Board] Board chưa sẵn sàng!");
+            return;
+        }
+
         destructionCountPanel.SetActive(false);
 
         foreach (GameObject item in allDots)
@@ -2927,6 +3138,302 @@ public class Board : MonoBehaviour
         PlayerPrefs.Save();
 
         UnityEngine.SceneManagement.SceneManager.LoadScene("QuangTruong");
+    }
+
+    // ==================== CHECK VALID MOVES ====================
+
+    /// <summary>
+    /// Kiểm tra xem board có còn nước đi hợp lệ không
+    /// </summary>
+    public bool HasValidMoves()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (allDots[i, j] == null) continue;
+
+                // Kiểm tra 4 hướng: trái, phải, lên, xuống
+                int[][] directions = new int[][]
+                {
+                new[] { -1, 0 }, // trái
+                new[] { 1, 0 },  // phải
+                new[] { 0, -1 }, // xuống
+                new[] { 0, 1 }   // lên
+                };
+
+                foreach (var dir in directions)
+                {
+                    int newX = i + dir[0];
+                    int newY = j + dir[1];
+
+                    if (newX < 0 || newX >= width || newY < 0 || newY >= height)
+                        continue;
+
+                    if (allDots[newX, newY] == null)
+                        continue;
+
+                    // Kiểm tra xem swap này có tạo match không
+                    if (WouldCreateMatch(i, j, newX, newY))
+                    {
+                        return true; // Tìm thấy nước đi hợp lệ
+                    }
+                }
+            }
+        }
+
+        return false; // Không còn nước đi
+    }
+
+    /// <summary>
+    /// Kiểm tra xem việc swap 2 viên có tạo match không
+    /// </summary>
+    private bool WouldCreateMatch(int x1, int y1, int x2, int y2)
+    {
+        GameObject dot1 = allDots[x1, y1];
+        GameObject dot2 = allDots[x2, y2];
+
+        if (dot1 == null || dot2 == null) return false;
+
+        // Swap tạm thời
+        allDots[x1, y1] = dot2;
+        allDots[x2, y2] = dot1;
+
+        bool hasMatch = false;
+
+        // Kiểm tra match tại vị trí x1, y1
+        if (CheckMatchAt(x1, y1, dot2.tag))
+        {
+            hasMatch = true;
+        }
+
+        // Kiểm tra match tại vị trí x2, y2
+        if (!hasMatch && CheckMatchAt(x2, y2, dot1.tag))
+        {
+            hasMatch = true;
+        }
+
+        // Hoàn tác swap
+        allDots[x1, y1] = dot1;
+        allDots[x2, y2] = dot2;
+
+        return hasMatch;
+    }
+
+    /// <summary>
+    /// Kiểm tra có match tại vị trí cụ thể không
+    /// </summary>
+    private bool CheckMatchAt(int col, int row, string tag)
+    {
+        // Kiểm tra ngang
+        int horizontalCount = 1;
+
+        // Đếm bên trái
+        int left = col - 1;
+        while (left >= 0 && allDots[left, row] != null && allDots[left, row].tag == tag)
+        {
+            horizontalCount++;
+            left--;
+        }
+
+        // Đếm bên phải
+        int right = col + 1;
+        while (right < width && allDots[right, row] != null && allDots[right, row].tag == tag)
+        {
+            horizontalCount++;
+            right++;
+        }
+
+        if (horizontalCount >= 3) return true;
+
+        // Kiểm tra dọc
+        int verticalCount = 1;
+
+        // Đếm bên dưới
+        int down = row - 1;
+        while (down >= 0 && allDots[col, down] != null && allDots[col, down].tag == tag)
+        {
+            verticalCount++;
+            down--;
+        }
+
+        // Đếm bên trên
+        int up = row + 1;
+        while (up < height && allDots[col, up] != null && allDots[col, up].tag == tag)
+        {
+            verticalCount++;
+            up++;
+        }
+
+        if (verticalCount >= 3) return true;
+
+        return false;
+    }
+
+    // ==================== RESET BOARD ====================
+
+    /// <summary>
+    /// Reset toàn bộ board khi không còn nước đi
+    /// </summary>
+    public IEnumerator ResetBoardWhenNoMoves()
+    {
+        Debug.Log("[Board] Không còn nước đi! Đang reset board...");
+
+        // Thông báo cho người chơi
+        if (txtYourTurn != null)
+        {
+            txtYourTurn.SetActive(true);
+            Text txtComponent = txtYourTurn.GetComponent<Text>();
+            if (txtComponent != null)
+            {
+                txtComponent.text = "SHUFFLING...";
+            }
+        }
+
+        // Pause game
+        currentState = GameState.wait;
+        if (active != null)
+        {
+            active.PauseTurn();
+        }
+
+        // Fade out tất cả viên
+        yield return StartCoroutine(FadeOutAllDots());
+
+        // Xóa tất cả viên hiện tại
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (allDots[i, j] != null)
+                {
+                    Destroy(allDots[i, j]);
+                    allDots[i, j] = null;
+                }
+            }
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        // Tạo lại board mới (đảm bảo có nước đi)
+        yield return StartCoroutine(CreateNewValidBoard());
+
+        // Ẩn thông báo
+        if (txtYourTurn != null)
+        {
+            txtYourTurn.SetActive(false);
+        }
+
+        // Resume game
+        currentState = GameState.move;
+        if (active != null)
+        {
+            active.ResumeTurn();
+        }
+
+        Debug.Log("[Board] Reset board hoàn tất!");
+    }
+
+    /// <summary>
+    /// Fade out tất cả viên
+    /// </summary>
+    private IEnumerator FadeOutAllDots()
+    {
+        List<GameObject> dotsToFade = new List<GameObject>();
+
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (allDots[i, j] != null)
+                {
+                    dotsToFade.Add(allDots[i, j]);
+                }
+            }
+        }
+
+        foreach (GameObject dot in dotsToFade)
+        {
+            if (dot != null)
+            {
+                LeanTween.scale(dot, Vector3.zero, 0.3f).setEaseInBack();
+            }
+        }
+
+        yield return new WaitForSeconds(0.3f);
+    }
+
+    /// <summary>
+    /// Tạo board mới đảm bảo có nước đi hợp lệ
+    /// </summary>
+    private IEnumerator CreateNewValidBoard()
+    {
+        int maxAttempts = 10; // Số lần thử tối đa
+        int attempts = 0;
+
+        while (attempts < maxAttempts)
+        {
+            // Tạo board mới
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    Vector2 tempPosition = new Vector2(i, j + offSet);
+                    int dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                    int maxIterations = 0;
+
+                    // Tránh tạo match ban đầu
+                    while (MatchesAt(i, j, dots[dotToUse]) && maxIterations < 100)
+                    {
+                        dotToUse = UnityEngine.Random.Range(0, dots.Length);
+                        maxIterations++;
+                    }
+
+                    GameObject dot = Instantiate(dots[dotToUse], tempPosition, Quaternion.identity);
+                    dot.GetComponent<Dot>().row = j;
+                    dot.GetComponent<Dot>().column = i;
+                    dot.transform.parent = this.transform;
+                    dot.name = "(" + i + "," + j + ")";
+                    dot.transform.localScale = Vector3.zero;
+                    allDots[i, j] = dot;
+
+                    // Animation spawn
+                    LeanTween.scale(dot, Vector3.one, 0.3f)
+                        .setEaseOutBack()
+                        .setDelay(i * 0.02f + j * 0.02f);
+                }
+            }
+
+            yield return new WaitForSeconds(0.5f);
+
+            // Kiểm tra xem board mới có nước đi không
+            if (HasValidMoves())
+            {
+                Debug.Log($"[Board] Tạo board thành công sau {attempts + 1} lần thử");
+                yield break; // Board hợp lệ, thoát
+            }
+
+            // Nếu không có nước đi, xóa và thử lại
+            Debug.Log($"[Board] Board không có nước đi, thử lại... ({attempts + 1}/{maxAttempts})");
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (allDots[i, j] != null)
+                    {
+                        Destroy(allDots[i, j]);
+                        allDots[i, j] = null;
+                    }
+                }
+            }
+
+            attempts++;
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        // Nếu sau maxAttempts vẫn không tạo được board hợp lệ
+        Debug.LogWarning("[Board] Không thể tạo board hợp lệ sau nhiều lần thử!");
     }
 
 }

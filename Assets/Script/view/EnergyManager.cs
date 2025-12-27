@@ -17,17 +17,17 @@ public class EnergyManager : MonoBehaviour
     private int maxEnergy;
     private DateTime nextRegenTime;
     private const float REGEN_INTERVAL_MINUTES = 8f;
-    
+
     [Header("Client-side State")]
     private bool isRegenerating = false;
     private Coroutine regenCoroutine;
     private DateTime lastServerSync;
-    
+
     // ✅ THROTTLE SETTINGS - Ngăn spam API
     private const float MIN_SYNC_INTERVAL_SECONDS = 5f; // Tối thiểu 5 giây giữa các lần gọi API
     private const float AUTO_SYNC_INTERVAL_SECONDS = 60f; // Tự động sync mỗi 60 giây (nếu cần)
     private bool isSyncing = false; // Flag để tránh gọi API đồng thời
-    
+
     // ✅ SMART SYNC - Chỉ sync khi cần thiết
     private bool needsServerSync = false; // Đánh dấu cần sync với server
     private Coroutine autoSyncCoroutine;
@@ -60,10 +60,9 @@ public class EnergyManager : MonoBehaviour
         txtEnergy = energyText;
         txtCountdown = countdownText;
         imgEnergyBar = energyBar;
-        
-        Debug.Log("[EnergyManager] UI registered");
+
         UpdateUI();
-        
+
         // ✅ CHỈ sync nếu chưa có data hoặc đã lâu không sync
         if (currentEnergy == 0 || (DateTime.Now - lastServerSync).TotalSeconds > AUTO_SYNC_INTERVAL_SECONDS)
         {
@@ -78,12 +77,11 @@ public class EnergyManager : MonoBehaviour
             StopCoroutine(regenCoroutine);
             regenCoroutine = null;
         }
-        
+
         txtEnergy = null;
         txtCountdown = null;
         imgEnergyBar = null;
-        
-        Debug.Log("[EnergyManager] UI unregistered");
+
     }
 
     // ════════════════════════════════════════════════════════
@@ -96,7 +94,7 @@ public class EnergyManager : MonoBehaviour
         {
             StopCoroutine(autoSyncCoroutine);
         }
-        
+
         autoSyncCoroutine = StartCoroutine(AutoSyncLoop());
     }
 
@@ -105,13 +103,15 @@ public class EnergyManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(AUTO_SYNC_INTERVAL_SECONDS);
-            
-            // ✅ CHỈ sync nếu:
-            // 1. Năng lượng chưa full (cần tracking regeneration)
-            // 2. Có flag needsServerSync (có thay đổi cần sync)
+
+            // THÊM CHECK NÀY:
+            if (currentEnergy > maxEnergy)
+            {
+                needsServerSync = false;
+                continue; // Bỏ qua sync
+            }
             if ((currentEnergy < maxEnergy || needsServerSync) && !isSyncing)
             {
-                Debug.Log("[EnergyManager] Auto-sync triggered (periodic check)");
                 RefreshEnergyFromServer();
                 needsServerSync = false;
             }
@@ -130,7 +130,6 @@ public class EnergyManager : MonoBehaviour
         // ✅ THROTTLE 1: Đang sync thì bỏ qua
         if (isSyncing)
         {
-            Debug.Log("[EnergyManager] ⏸️ Skipping refresh (already syncing)");
             return;
         }
 
@@ -138,7 +137,6 @@ public class EnergyManager : MonoBehaviour
         float timeSinceLastSync = (float)(DateTime.Now - lastServerSync).TotalSeconds;
         if (timeSinceLastSync < MIN_SYNC_INTERVAL_SECONDS)
         {
-            Debug.Log($"[EnergyManager] ⏸️ Skipping refresh (too soon: {timeSinceLastSync:F1}s < {MIN_SYNC_INTERVAL_SECONDS}s)");
             return;
         }
 
@@ -152,39 +150,35 @@ public class EnergyManager : MonoBehaviour
     {
         if (isSyncing)
         {
-            Debug.Log("[EnergyManager] ⏸️ Cannot force refresh (already syncing)");
             return;
         }
 
-        Debug.Log("[EnergyManager] 🔄 FORCE refresh");
         StartCoroutine(RefreshEnergyCoroutine());
     }
 
     private IEnumerator RefreshEnergyCoroutine()
     {
         isSyncing = true; // ✅ Đánh dấu đang sync
-        
+
         int userId = PlayerPrefs.GetInt("userId", 0);
         if (userId == 0)
         {
-            Debug.LogError("[EnergyManager] Invalid userId!");
             isSyncing = false;
             yield break;
         }
 
         string url = APIConfig.GET_ENERGY(userId);
-        Debug.Log($"[EnergyManager] 📡 Fetching from server: {url}");
 
         yield return APIManager.Instance.GetRequest<EnergyInfoDTO>(
             url,
             OnEnergyReceivedFromServer,
-            (error) => 
+            (error) =>
             {
                 OnEnergyError(error);
                 isSyncing = false; // ✅ Reset flag khi lỗi
             }
         );
-        
+
         isSyncing = false; // ✅ Reset flag khi xong
     }
 
@@ -194,7 +188,6 @@ public class EnergyManager : MonoBehaviour
         maxEnergy = data.maxEnergy;
         lastServerSync = DateTime.Now;
 
-        Debug.Log($"[EnergyManager] ✓ Server data: {currentEnergy}/{maxEnergy}, Next in {data.secondsUntilNextRegen}s");
 
         // Tính thời điểm hồi năng lượng tiếp theo
         if (currentEnergy < maxEnergy && data.secondsUntilNextRegen > 0)
@@ -228,21 +221,19 @@ public class EnergyManager : MonoBehaviour
 
         isRegenerating = true;
         regenCoroutine = StartCoroutine(ClientSideRegenLoop());
-        
-        Debug.Log($"[EnergyManager] ✓ Client-side regen started (next at {nextRegenTime:HH:mm:ss})");
+
     }
 
     private void StopClientSideRegeneration()
     {
         isRegenerating = false;
-        
+
         if (regenCoroutine != null)
         {
             StopCoroutine(regenCoroutine);
             regenCoroutine = null;
         }
 
-        Debug.Log("[EnergyManager] ✓ Regen stopped (full energy)");
     }
 
     private IEnumerator ClientSideRegenLoop()
@@ -256,7 +247,6 @@ public class EnergyManager : MonoBehaviour
             {
                 // Hồi 1 năng lượng
                 currentEnergy++;
-                Debug.Log($"[EnergyManager] ⚡ Regenerated! {currentEnergy}/{maxEnergy}");
 
                 // ✅ Đánh dấu cần sync với server (để confirm)
                 needsServerSync = true;
@@ -310,7 +300,7 @@ public class EnergyManager : MonoBehaviour
         }
 
         TimeSpan remaining = nextRegenTime - DateTime.Now;
-        
+
         if (remaining.TotalSeconds < 0)
         {
             remaining = TimeSpan.Zero;
@@ -318,7 +308,7 @@ public class EnergyManager : MonoBehaviour
 
         int minutes = (int)remaining.TotalMinutes;
         int seconds = remaining.Seconds;
-        
+
         txtCountdown.text = $"{minutes:D2}:{seconds:D2}";
     }
 
@@ -333,14 +323,12 @@ public class EnergyManager : MonoBehaviour
     {
         if (currentEnergy < amount)
         {
-            Debug.LogWarning($"[EnergyManager] ❌ Not enough energy! Need {amount}, have {currentEnergy}");
             onFailed?.Invoke();
             return false;
         }
 
         // ✅ OPTIMISTIC UPDATE: Trừ ngay ở client
         currentEnergy -= amount;
-        Debug.Log($"[EnergyManager] 💸 Consumed {amount} energy → {currentEnergy}/{maxEnergy}");
 
         UpdateUI();
 
@@ -362,21 +350,18 @@ public class EnergyManager : MonoBehaviour
         int userId = PlayerPrefs.GetInt("userId", 0);
         string url = APIConfig.CONSUME_ENERGY(userId, amount);
 
-        Debug.Log($"[EnergyManager] 📡 Syncing consume with server (background)...");
 
         yield return APIManager.Instance.PostRequest_Generic<ConsumeEnergyResponse>(
             url,
             null,
             (response) =>
             {
-                Debug.Log($"[EnergyManager] ✓ Consume synced: {response.message}");
                 lastServerSync = DateTime.Now;
                 onSuccess?.Invoke();
             },
             (error) =>
             {
-                Debug.LogError($"[EnergyManager] ❌ Sync error: {error}");
-                
+
                 // ✅ ROLLBACK nếu server reject
                 currentEnergy += amount;
                 UpdateUI();
@@ -393,16 +378,18 @@ public class EnergyManager : MonoBehaviour
     {
         if (hasFocus)
         {
+            if (currentEnergy > maxEnergy)
+            {
+                return;
+            }
             // ✅ CHỈ sync nếu đã lâu không sync (> 30s)
             float timeSinceLastSync = (float)(DateTime.Now - lastServerSync).TotalSeconds;
             if (timeSinceLastSync > 30f)
             {
-                Debug.Log($"[EnergyManager] 🔄 App focused (last sync: {timeSinceLastSync:F0}s ago) → Refreshing");
                 RefreshEnergyFromServer();
             }
             else
             {
-                Debug.Log($"[EnergyManager] ⏸️ App focused but sync recent ({timeSinceLastSync:F0}s ago) → Skipping");
             }
         }
     }
@@ -411,16 +398,18 @@ public class EnergyManager : MonoBehaviour
     {
         if (!isPaused)
         {
+            if (currentEnergy > maxEnergy)
+            {
+                return;
+            }
             // ✅ CHỈ sync nếu đã lâu không sync (> 30s)
             float timeSinceLastSync = (float)(DateTime.Now - lastServerSync).TotalSeconds;
             if (timeSinceLastSync > 30f)
             {
-                Debug.Log($"[EnergyManager] 🔄 App resumed (last sync: {timeSinceLastSync:F0}s ago) → Refreshing");
                 RefreshEnergyFromServer();
             }
             else
             {
-                Debug.Log($"[EnergyManager] ⏸️ App resumed but sync recent ({timeSinceLastSync:F0}s ago) → Skipping");
             }
         }
     }
@@ -433,18 +422,18 @@ public class EnergyManager : MonoBehaviour
     public int GetMaxEnergy() => maxEnergy;
     public bool IsRegenerating() => isRegenerating;
     public bool IsSyncing() => isSyncing; // ✅ Kiểm tra đang sync hay không
-    
+
     public TimeSpan GetTimeUntilNextRegen()
     {
         if (currentEnergy >= maxEnergy)
             return TimeSpan.Zero;
-            
+
         return nextRegenTime - DateTime.Now;
     }
 
     // ✅ Lấy thời gian sync cuối
     public DateTime GetLastServerSync() => lastServerSync;
-    
+
     // ✅ Kiểm tra có cần sync không
     public bool NeedsServerSync() => needsServerSync;
 
@@ -455,13 +444,13 @@ public class EnergyManager : MonoBehaviour
     private void OnDestroy()
     {
         StopClientSideRegeneration();
-        
+
         if (autoSyncCoroutine != null)
         {
             StopCoroutine(autoSyncCoroutine);
             autoSyncCoroutine = null;
         }
-        
+
         if (gameObject != null)
         {
             LeanTween.cancel(gameObject);
